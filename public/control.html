@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Frenemies — Streamer controls</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/control.js" defer></script>
+  </head>
+  <body>
+    <main class="shell">
+      <div class="row">
+        <a class="brand" href="/">FRENEMIES /</a
+        ><span class="label" id="mode"></span>
+      </div>
+      <h1 style="font-size: 54px; letter-spacing: -2px">Your battlefield.</h1>
+      <p id="channel">Loading your channel…</p>
+      <div class="panel">
+        <div class="row">
+          <button class="primary" data-action="start">Start battle</button
+          ><button data-action="pause">Pause / Resume</button
+          ><button data-action="next">Next battle</button
+          ><button class="danger" data-action="kill">
+            KILL-SWITCH · Clear overlay
+          </button>
+        </div>
+        <p id="state" aria-live="polite"></p>
+        <div class="row">
+          <button data-action="supply">Supply drop · Both +5</button
+          ><button data-action="fog">Fog · 10s</button
+          ><button data-action="freeze">Freeze voting · 10s</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Bring it to your stream.</h2>
+        <label for="overlay"
+          >OBS Browser Source URL · 1920 × 1080 (or 1280 × 720)</label
+        ><input id="overlay" readonly /><a
+          id="preview"
+          class="button"
+          target="_blank"
+          rel="noopener"
+          >Open overlay ↗</a
+        >
+        <p class="mini">
+          Keep the control page signed in on your own computer. The overlay link
+          is read-only.
+        </p>
+      </div>
+      <div class="panel">
+        <h2>Connection status</h2>
+        <div id="integration" class="status"></div>
+      </div>
+      <p class="mini">
+        Team selection opens between battles. New players can join during a
+        battle; existing players cannot switch. Active players count until the
+        battle ends.
+      </p>
+    </main>
+  </body>
+</html>

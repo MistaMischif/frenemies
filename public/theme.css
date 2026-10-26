@@ -1,0 +1,7 @@
+/* ASSET SWAP POINT: colors and optional original artwork belong here.
+   Any future images must use width/height:auto and object-fit:contain. */
+:root {
+  --background: #0b101b;
+  --red: #ff6c80;
+  --blue: #65b4ff;
+}

@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: frenemies
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: EVENTSUB_SECRET
+        generateValue: true
+      - key: HYPE_TEAM_POLICY
+        value: contributors
+      - key: TWITCH_CLIENT_ID
+        sync: false
+      - key: TWITCH_CLIENT_SECRET
+        sync: false

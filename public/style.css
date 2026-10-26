@@ -1,0 +1,368 @@
+@import url("/theme.css");
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--background);
+  color: #f5f6fa;
+  font-family: Arial, Helvetica, sans-serif;
+}
+a {
+  color: #b4c6ff;
+}
+button,
+.button {
+  cursor: pointer;
+  border: 1px solid #58617a;
+  border-radius: 7px;
+  background: #252e43;
+  color: white;
+  padding: 15px 23px;
+  font-weight: 700;
+  font-size: 16px;
+  text-decoration: none;
+  display: inline-block;
+}
+button:hover,
+.button:hover {
+  background: #3b4865;
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: wait;
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #efff83;
+  outline-offset: 4px;
+}
+.primary {
+  background: #d9fb7b;
+  color: #11180a;
+  border-color: #d9fb7b;
+}
+.danger {
+  background: #a51634;
+  border-color: #fd5374;
+}
+small,
+.muted {
+  color: #a6afc2;
+}
+.shell {
+  max-width: 1120px;
+  margin: auto;
+  padding: 48px 28px;
+}
+.brand {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+.brand span {
+  color: #d9fb7b;
+}
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: #acb6ca;
+  font-weight: 700;
+}
+.hero {
+  padding: 85px 0 60px;
+}
+h1 {
+  font-size: clamp(48px, 7vw, 90px);
+  line-height: 1;
+  letter-spacing: -5px;
+  margin: 25px 0;
+}
+h2 {
+  font-size: 28px;
+}
+p {
+  line-height: 1.7;
+  max-width: 720px;
+}
+.lead {
+  font-size: 21px;
+  color: #bdc6d9;
+}
+.row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.panel {
+  border: 1px solid #303a50;
+  background: #141b2a;
+  border-radius: 12px;
+  padding: 24px;
+  margin: 22px 0;
+}
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.steps strong {
+  color: #d9fb7b;
+}
+code {
+  color: #d9fb7b;
+}
+input {
+  width: 100%;
+  padding: 12px;
+  background: #080d17;
+  color: #e6ebf8;
+  border: 1px solid #414d67;
+  border-radius: 5px;
+  margin: 8px 0 18px;
+}
+.label {
+  color: #ffde85;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+.arena {
+  height: 100vh;
+  min-height: 600px;
+  padding: 4vh 4vw;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 10% 55%, #38192680, transparent 45%),
+    radial-gradient(ellipse at 90% 55%, #17365b80, transparent 45%), #090e18;
+}
+.arena header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.arena .brand {
+  font-size: clamp(25px, 3vw, 48px);
+}
+.timer {
+  text-align: center;
+}
+.timer strong {
+  display: block;
+  font-size: clamp(44px, 5.6vw, 88px);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -4px;
+}
+.battle {
+  display: grid;
+  grid-template-columns: 1fr 110px 1fr;
+  align-items: center;
+  flex: 1;
+  gap: 2vw;
+}
+.team {
+  padding: 3vw;
+  border: 1px solid #ffffff25;
+  border-radius: 16px;
+  background: #111827bb;
+  position: relative;
+}
+.team.red {
+  border-top: 6px solid var(--red);
+}
+.team.blue {
+  border-top: 6px solid var(--blue);
+}
+.team h2 {
+  font-size: clamp(38px, 5vw, 76px);
+  margin: 12px 0;
+  letter-spacing: -3px;
+}
+.red h2 {
+  color: var(--red);
+}
+.blue h2 {
+  color: var(--blue);
+}
+.headcount {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 20px 0;
+}
+.headcount strong {
+  font-size: clamp(44px, 5vw, 80px);
+}
+.headcount span {
+  font-size: clamp(16px, 1.6vw, 26px);
+  color: #c3ccdc;
+}
+.linevalue {
+  font-size: clamp(24px, 3vw, 46px);
+  font-weight: 800;
+}
+.track {
+  height: 22px;
+  background: #ffffff12;
+  border-radius: 4px;
+  margin: 14px 0 20px;
+  overflow: hidden;
+}
+.fill {
+  height: 100%;
+  transition: width 0.3s;
+  background: var(--red);
+}
+.blue .fill {
+  background: var(--blue);
+}
+.flags {
+  min-height: 32px;
+  font-size: clamp(16px, 1.5vw, 24px);
+  color: #e1fb98;
+}
+.votes {
+  font-size: clamp(14px, 1.3vw, 22px);
+  color: #aab5c9;
+  min-height: 30px;
+}
+.versus {
+  font-size: 40px;
+  text-align: center;
+  font-weight: 900;
+  color: #58667d;
+}
+.event {
+  padding: 18px 22px;
+  border-left: 4px solid #d9fb7b;
+  background: #182133;
+  font-size: clamp(22px, 2vw, 34px);
+  font-weight: 700;
+  min-height: 70px;
+}
+.score {
+  display: flex;
+  justify-content: space-between;
+  padding: 18px 0;
+  font-size: clamp(16px, 1.5vw, 25px);
+  color: #b7c4d9;
+}
+.commands {
+  text-align: center;
+  border-top: 1px solid #ffffff1a;
+  padding-top: 20px;
+  font-size: clamp(18px, 1.7vw, 28px);
+}
+.commands b {
+  color: #d9fb7b;
+}
+.connection {
+  position: fixed;
+  bottom: 4px;
+  right: 10px;
+  font-size: 12px;
+  color: #afbdd3;
+}
+.cleared {
+  visibility: hidden;
+}
+body.killed {
+  background: transparent;
+}
+.mini {
+  font-size: 14px;
+  color: #b4bfd4;
+}
+.status {
+  white-space: pre-line;
+  line-height: 1.7;
+}
+.arena .label {
+  font-size: clamp(14px, 1.3vw, 22px);
+}
+@media (max-width: 700px) {
+  .steps {
+    grid-template-columns: 1fr;
+  }
+  .battle {
+    grid-template-columns: 1fr 30px 1fr;
+    gap: 8px;
+  }
+  .versus {
+    font-size: 18px;
+  }
+  .team {
+    padding: 14px;
+  }
+  .arena {
+    padding: 18px;
+    min-height: 540px;
+  }
+  .team h2 {
+    font-size: 32px;
+  }
+  .headcount {
+    display: block;
+  }
+  .headcount strong {
+    font-size: 40px;
+  }
+  .headcount span {
+    display: block;
+    font-size: 14px;
+  }
+  .score {
+    font-size: 13px;
+  }
+  h1 {
+    letter-spacing: -3px;
+  }
+}
+@media (min-width: 701px) and (max-height: 800px) {
+  .arena {
+    padding: 3vh 4vw;
+  }
+  .team {
+    padding: 20px 28px;
+  }
+  .team h2 {
+    font-size: 48px;
+    margin: 8px 0;
+  }
+  .headcount {
+    margin: 10px 0;
+  }
+  .headcount strong {
+    font-size: 52px;
+  }
+  .track {
+    height: 16px;
+    margin: 10px 0;
+  }
+  .flags {
+    min-height: 24px;
+  }
+  .timer strong {
+    font-size: 58px;
+  }
+  .event {
+    min-height: 50px;
+    padding: 12px 18px;
+    font-size: 24px;
+  }
+  .score {
+    padding: 12px 0;
+  }
+  .commands {
+    padding-top: 12px;
+    font-size: 20px;
+  }
+  .battle {
+    min-height: 0;
+  }
+  .linevalue {
+    font-size: 32px;
+  }
+}

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Frenemies — Your chat. Two teams. One battle.</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <div class="brand">FRENEMIES<span> /</span></div>
+      <section class="hero">
+        <div class="eyebrow">THE STREAM IS YOUR BATTLEFIELD</div>
+        <h1>Friends in chat.<br />Enemies in battle.</h1>
+        <p class="lead">
+          Red vs Blue. Three minutes. Your viewers pick a team and call the
+          shots. More active players means more power.
+        </p>
+        <div class="row">
+          <a class="button primary" href="/auth/twitch"
+            >Connect your Twitch channel ↗</a
+          >
+          <form method="post" action="/demo">
+            <!--CSRF--><button>Try simulated chat</button>
+          </form>
+        </div>
+        <p class="mini">
+          No viewer install. No game account. Just Twitch chat.<br />Demo uses
+          simulated players and never changes the season scoreboard.
+        </p>
+      </section>
+      <section class="steps">
+        <div class="panel">
+          <strong>01 / PICK A TEAM</strong>
+          <h2>Red or Blue?</h2>
+          <p>
+            Type <code>!red</code> or <code>!blue</code> in chat. Change teams
+            between battles.
+          </p>
+        </div>
+        <div class="panel">
+          <strong>02 / CALL THE SHOTS</strong>
+          <h2>Make it count.</h2>
+          <p>
+            <code>!attack !defend !heal !surge</code><br />One vote every two
+            seconds. Your team's most popular action wins.
+          </p>
+        </div>
+        <div class="panel">
+          <strong>03 / HOLD THE LINE</strong>
+          <h2>Numbers are power.</h2>
+          <p>
+            Break the other team's line or hold more strength when time runs
+            out. No hidden comeback boosts.
+          </p>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

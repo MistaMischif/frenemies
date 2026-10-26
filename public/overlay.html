@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Frenemies — Battle overlay</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/overlay.js" defer></script>
+  </head>
+  <body>
+    <main class="arena" id="arena">
+      <header>
+        <div class="brand">
+          FRENEMIES<span> /</span>
+          <div class="eyebrow" id="round">TEAM BATTLE</div>
+        </div>
+        <div class="timer">
+          <span class="eyebrow" id="status">WAITING</span
+          ><strong id="timer">3:00</strong>
+        </div>
+        <div>
+          <div class="label" id="mode"></div>
+          <div class="mini" id="effect"></div>
+        </div>
+      </header>
+      <section class="battle">
+        <article class="team red">
+          <div class="eyebrow">JOIN WITH !RED</div>
+          <h2>RED</h2>
+          <div class="headcount">
+            <strong id="red-count">0</strong><span>active players</span>
+          </div>
+          <div class="linevalue">
+            <span id="red-line">100</span> <small>/ 100</small>
+          </div>
+          <div class="track"><div class="fill" id="red-bar"></div></div>
+          <div class="flags" id="red-flags"></div>
+          <div class="votes" id="red-votes"></div>
+        </article>
+        <div class="versus">VS</div>
+        <article class="team blue">
+          <div class="eyebrow">JOIN WITH !BLUE</div>
+          <h2>BLUE</h2>
+          <div class="headcount">
+            <strong id="blue-count">0</strong><span>active players</span>
+          </div>
+          <div class="linevalue">
+            <span id="blue-line">100</span> <small>/ 100</small>
+          </div>
+          <div class="track"><div class="fill" id="blue-bar"></div></div>
+          <div class="flags" id="blue-flags"></div>
+          <div class="votes" id="blue-votes"></div>
+        </article>
+      </section>
+      <div class="event" id="event" aria-live="polite">
+        Pick your team. Hold your line.
+      </div>
+      <div class="score">
+        <span id="stream">THIS STREAM · RED 0 : 0 BLUE</span
+        ><span id="season">SEASON · RED 0 : 0 BLUE</span>
+      </div>
+      <div class="commands">
+        <b>!attack</b> &nbsp; !defend &nbsp; !heal &nbsp; !surge
+        <span class="muted"> / ONE VOTE EVERY 2s</span>
+      </div>
+    </main>
+    <div class="connection" id="connection">Connecting…</div>
+  </body>
+</html>
