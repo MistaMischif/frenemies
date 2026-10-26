@@ -6,7 +6,7 @@ Red and Blue are the only teams. The streamer hosts; viewers play through Twitch
 
 ## Current delivery status
 
-Deployed October 26, 2026: **https://frenemies-u3n4.onrender.com**. Public source: **https://github.com/MistaMischif/frenemies**. Render Free + Neon Free are configured. Twelve automated tests pass. Public home, controls, WebSocket overlay and a complete **simulated chat** battle have passed browser checks. Real Twitch authentication/events, live viewers, score persistence after a real battle/restart, and the final video are **not yet verified**. Screenshots in `submission/` are explicitly simulated, not live Twitch evidence. Do not submit this status as a completed live test.
+Deployed October 26, 2026: **https://frenemies-u3n4.onrender.com**. Public source: **https://github.com/MistaMischif/frenemies**. Render Free + Neon Free are configured. Fourteen automated tests pass. Twitch sign-in and real chat battles with two builder-controlled accounts have been verified, including attacks, surge, control effects and a Blue win saved to the season scoreboard. This is not evidence of an independent audience or live OBS broadcast. Genuine Twitch event effects and the final video remain pending. See `submission/LIVE-TEST.md` for observed evidence and remaining checks; simulated screenshots remain labelled.
 
 ## Streamer setup — target under five minutes on a configured server
 
@@ -53,7 +53,7 @@ Raid events require no additional scope. No email, bits-spending, chat-writing, 
 
 After OAuth, the server looks up the broadcaster through Helix, connects their channel chat, and requests webhook subscriptions: `channel.follow` v2, `channel.subscribe` v1, `channel.subscription.gift` v1, `channel.subscription.message` v1, `channel.raid` v1, `channel.hype_train.begin` v2 and `channel.channel_points_custom_reward_redemption.add` v1. Controls display requested/existing/failed states; “requested” alone is not proof a live event arrived.
 
-- Follow: joined follower's team +2.
+- Follow: joined follower's team +2, once per Twitch account per channel across all battles and restarts.
 - Subscription/resub: subscriber's next team attack powered up. Gift subscriptions credit the giver; gift-recipient subscribe notifications are ignored to avoid double awards. Anonymous/unjoined givers cannot be assigned a team and get no bonus.
 - Raid: the raiding broadcaster's chosen team gets +5. Twitch does not supply a team roster of all raiders. Unjoined raiding broadcaster means no team bonus; raiders may join through chat.
 - Hype Train v2 does not identify one triggering viewer. With the **user-approved** `HYPE_TEAM_POLICY=contributors`, each team represented by `top_contributions` gets 60 seconds of double vote weight. Both teams may benefit; the overlay shows individual frenzy countdowns. Unknown/unjoined contributors are not silently assigned a team. With any other policy value, the overlay announces the train without assigning frenzy.
