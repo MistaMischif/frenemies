@@ -6,7 +6,7 @@ Red and Blue are the only teams. The streamer hosts; viewers play through Twitch
 
 ## Current delivery status
 
-Built locally on October 26, 2026. Automated rules tests and a browser-based **simulated chat** battle have passed. Public hosting, real Twitch authentication/events, live viewers and the final video are **not yet verified**. Screenshots in `submission/` are explicitly simulated, not live Twitch evidence. Do not submit this status as a completed live test.
+Deployed October 26, 2026: **https://frenemies-u3n4.onrender.com**. Public source: **https://github.com/MistaMischif/frenemies**. Render Free + Neon Free are configured. Twelve automated tests pass. Public home, controls, WebSocket overlay and a complete **simulated chat** battle have passed browser checks. Real Twitch authentication/events, live viewers, score persistence after a real battle/restart, and the final video are **not yet verified**. Screenshots in `submission/` are explicitly simulated, not live Twitch evidence. Do not submit this status as a completed live test.
 
 ## Streamer setup — target under five minutes on a configured server
 

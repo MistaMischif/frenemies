@@ -12,12 +12,12 @@ The streamer hosts through a private control page and adds a read-only overlay t
 
 Active participants are counted for the whole current battle; inactivity does not remove them. Viewers need no separate installation or game account. They participate through their existing Twitch chat account.
 
-Codex built the server, Twitch integration, overlay, controls, tests, persistence and deployment configuration. It also checked the official rules and exercised a labelled simulated battle in the browser. **Real Twitch verification and deployment are pending; revise this paragraph only after they pass.**
+Codex built the server, Twitch integration, overlay, controls, tests, persistence and deployment configuration. It also checked the official rules and exercised a labelled simulated battle in the browser. The public deployment and a labelled simulated-chat battle have been verified. **Real Twitch verification remains pending; revise this claim only after it passes.**
 
 ## Submission fields still needed
 
-- Public game URL: pending deployment.
-- Repository URL: pending publication.
+- Public game URL: https://frenemies-u3n4.onrender.com
+- Repository URL: https://github.com/MistaMischif/frenemies
 - Public YouTube URL: pending real footage and editing.
 - Screenshots: current captures are **SIMULATED CHAT** only; replace or explicitly label them.
 - Codex session ID: 01a177d0-c6fd-7e90-9a57-dfd241130600.

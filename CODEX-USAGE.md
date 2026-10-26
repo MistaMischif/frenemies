@@ -8,4 +8,4 @@ Verified by automated tests: vote limits, team locking, active counts, damage/he
 
 Verified through browser automation on October 26: home, labelled simulated session creation, battle start, 12 Red versus 6 Blue active counts, votes and line movement, completed simulated battle and scoreboard, next battle, kill-switch blanking; inspected 1920×1080 and corrected/inspected 1280×720 layout.
 
-Verified by human in a real live Twitch test: **none yet**. Do not confuse automated simulated testing with a live Twitch test. Public deployment and actual OAuth/EventSub verification remain pending.
+Verified by human in a real live Twitch test: **none yet**. Do not confuse automated simulated testing with a live Twitch test. Public deployment is verified at https://frenemies-u3n4.onrender.com on Render Free with Neon Free. A complete simulated battle ran through public WebSockets and reached the scoreboard. Actual Twitch OAuth/EventSub and real viewer verification remain pending.
