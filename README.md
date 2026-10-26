@@ -120,3 +120,4 @@ A later version may head toward the Cradle to the Grave universe with Humans vs 
 ## Future ideas
 
 None implemented beyond the requested scope.
+Follow bonuses are limited to one per Twitch account per channel, using the stable Twitch user ID. Eligible claims are saved before awarding points in `frenemies_follow_claims` (or local `follow-claims.json`) and survive server restarts and season resets. Back up this table alongside scores. These IDs are retained solely to prevent repeat bonuses. A claim at full strength still counts; a pause or battle transition during saving may consume the claim without awarding points. Database failures award nothing and request delivery retry. Bonuses issued before this protection was deployed cannot be reconstructed.

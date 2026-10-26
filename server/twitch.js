@@ -143,8 +143,25 @@ export function connectChat(room, tokens) {
   };
   open();
 }
-export function applyEvent(room, type, e) {
+export async function applyEvent(room, type, e) {
   const g = room.game;
+  if (type === "channel.follow") {
+    const name = String(e.user_login || "").toLowerCase();
+    if (
+      g.status !== "running" ||
+      !g.players.has(name) ||
+      name === g.host ||
+      g.blockedNames.has(name) ||
+      !/^\d+$/.test(String(e.user_id || ""))
+    )
+      return;
+    const round = g.round;
+    // Claim before awarding: database failures cannot grant unrecorded bonuses.
+    if (await room.claimFollow(String(e.user_id))) {
+      if (g.round === round && g.status === "running") g.moment("follow", name);
+    }
+    return;
+  }
   if (type === "channel.channel_points_custom_reward_redemption.add") {
     const names = { "Supply drop": "supply", Fog: "fog", Freeze: "freeze" };
     const action = names[e.reward?.title];
@@ -164,7 +181,6 @@ export function applyEvent(room, type, e) {
     return;
   }
   const kind = {
-    "channel.follow": "follow",
     "channel.subscribe": "sub",
     "channel.subscription.gift": "sub",
     "channel.subscription.message": "sub",

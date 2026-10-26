@@ -77,6 +77,7 @@ function makeRoom(id, login, simulated = false) {
     id,
     login,
     overlay: old.overlay,
+    claimFollow: (userId) => storage.claimFollow(id, userId),
     integration: {
       chat: simulated ? "SIMULATED" : "not connected",
       subscriptions: [],
@@ -108,7 +109,7 @@ app.use(
   }),
 );
 app.use("/eventsub", express.raw({ type: "application/json", limit: "64kb" }));
-app.post("/eventsub", (req, res) => {
+app.post("/eventsub", async (req, res) => {
   const id = req.get("Twitch-Eventsub-Message-Id") || "",
     stamp = req.get("Twitch-Eventsub-Message-Timestamp") || "",
     sig = req.get("Twitch-Eventsub-Message-Signature") || "";
@@ -142,7 +143,6 @@ app.post("/eventsub", (req, res) => {
   )
     return res.type("text").send(body.challenge);
   if (seen.has(id)) return res.sendStatus(204);
-  seen.set(id, Date.now());
   const room = rooms.get(
     body.subscription?.condition?.broadcaster_user_id ||
       body.subscription?.condition?.to_broadcaster_user_id,
@@ -153,8 +153,16 @@ app.post("/eventsub", (req, res) => {
         type: body.subscription.type,
         status: "revoked",
       });
-    else applyEvent(room, body.subscription.type, body.event || {});
+    else {
+      try {
+        await applyEvent(room, body.subscription.type, body.event || {});
+      } catch {
+        console.error("EventSub processing failed; requesting retry");
+        return res.sendStatus(503);
+      }
+    }
   }
+  seen.set(id, Date.now());
   res.sendStatus(204);
 });
 app.use(express.json({ limit: "8kb" }));
