@@ -1,6 +1,12 @@
 # Barrage Extension — setup and review package
 
-Status: implemented locally; NOT registered, reviewed, or enabled for real Bits. Local simulation is labelled and never processes Bits. The game/animated OBS overlay remains usable without the Extension.
+Status (October 28, 2026): animated overlay and gated Barrage backend deployed. Twitch Extension **Frenemies Battle**, client ID `x0jppxooovsh8expdwgbvhqfcallf3`, version `0.0.1` is registered. Panel/mobile bundle uploaded and Hosted Test reached successfully; returned to Local Test to finish configuration. NOT reviewed, released, or enabled for real Bits. Local simulation is labelled and never processes Bits. The game/animated OBS overlay remains usable without the Extension.
+
+## Console configuration verified October 28, 2026
+
+- Panel and Mobile use `panel.html`; configuration uses `config.html`. Optional viewer identity linking is enabled; chat sending is disabled. Render origin is allowlisted. Uploaded ZIP: 3.59 KB, MD5 `638476379c77b42f1474f1ae66af7c68`.
+- Monetization blocker: both Continue to Onboarding and Bits enabled are disabled in Local Test, including after refresh. The console gives no reason. Account owner must check Extensions Monetization Developer Onboarding in the broadcaster dashboard or contact Twitch Developer Support. Do not treat this as confirmed permanent ineligibility.
+- Still required: monetization eligibility/onboarding, product catalog, separate Extension credentials in Render, privacy notice/contact and review assets, controlled transaction verification, Twitch review. No new Extension secrets have been transferred. Keep the paid backend disabled.
 
 ## Fixed product and behavior
 
@@ -13,7 +19,7 @@ Status: implemented locally; NOT registered, reviewed, or enabled for real Bits.
 ## Twitch setup
 
 1. Create a separate Twitch Extension in the Developer Console. The existing broadcaster OAuth application is NOT an Extension. Use a panel and mobile view, with identity linking enabled. All client code is in `extension/`.
-2. Upload `submission/frenemies-extension.zip` in Hosted Test. Set panel/mobile path to `panel.html` and configuration path to `config.html`. Add `https://frenemies-u3n4.onrender.com` to allowed fetch/connect domains. Panel height: 600px.
+2. Upload `submission/frenemies-extension.zip` in Hosted Test. Set panel/mobile path to `panel.html` and configuration path to `config.html`. Add `https://frenemies-u3n4.onrender.com` to allowed fetch/connect domains. Panel height: 500px (Twitch maximum).
 3. Complete any required monetization onboarding personally (identity, tax/payout information and agreements). Register the fixed Bits product above. Confirm final pricing before making it live.
 4. Put the Extension client ID, OAuth client secret, and base64 shared signing secret in Render's `EXTENSION_CLIENT_ID`, `EXTENSION_CLIENT_SECRET`, `EXTENSION_SHARED_SECRET`. These are distinct credentials; never commit them or include them in the zip. Keep `EXTENSION_ENABLED=false` until configuration is ready.
 5. Only when ready for controlled verification, enable the Extension backend. The current verifier accepts **live** Helix transactions only and rejects `inDevelopment:true`; loopback is not evidence of payment. Test-product support is not enabled. Do not activate real Bits until an authorized tester agrees to the exact cost. Real Bits confirmation stays with the tester.
@@ -40,3 +46,4 @@ Original code-drawn squads and forts, projectiles, impact rings, shields, heal/s
 - https://dev.twitch.tv/docs/extensions/monetization/
 - https://dev.twitch.tv/docs/extensions/guidelines-and-policies/
 - https://dev.twitch.tv/docs/api/reference/#get-extension-transactions
+
