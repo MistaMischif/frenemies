@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { Game } from "../server/game.js";
 function game() {
   const g = new Game({ host: "host" });
-  g.chat("r", "!red");
-  g.chat("b", "!blue");
+  g.chat("r", "!human");
+  g.chat("b", "!zombie");
   g.start();
   return g;
 }
@@ -12,8 +12,8 @@ test("first vote counts once and switching is locked; host excluded", () => {
   const g = game();
   assert.equal(g.chat("r", "!attack"), true);
   assert.equal(g.chat("r", "!heal"), false);
-  assert.equal(g.chat("r", "!blue"), false);
-  assert.equal(g.chat("host", "!red"), false);
+  assert.equal(g.chat("r", "!zombie"), false);
+  assert.equal(g.chat("host", "!human"), false);
   g.advance(2000);
   assert.equal(g.teams.blue.line, 94);
   assert.equal(g.chat("r", "!heal"), true);
@@ -64,7 +64,7 @@ test("surge doubles, consumes power and enforces 30 second cooldown", () => {
 test("damage cap includes powered attacks; heal cap and maximum line", () => {
   const g = game();
   for (let i = 0; i < 40; i++) {
-    g.chat("p" + i, "!red");
+    g.chat("p" + i, "!human");
     g.chat("p" + i, "!attack");
   }
   g.teams.red.power = true;
@@ -105,7 +105,7 @@ test("freeze clears votes; fog hides totals server-side", () => {
 test("timer decides strength, then active players, then draw; records once", () => {
   let saved;
   const g = new Game({ save: (s) => (saved = { ...s }) });
-  g.chat("r", "!red");
+  g.chat("r", "!human");
   g.start();
   g.chat("r", "!defend");
   g.advance(180000);
@@ -137,8 +137,8 @@ test("blocklists enforced and simulated scores do not persist", () => {
     blockedCommands: ["!attack"],
     save: () => assert.fail("demo must not save"),
   });
-  assert.equal(g.chat("bad", "!red"), false);
-  g.chat("ok", "!red");
+  assert.equal(g.chat("bad", "!human"), false);
+  g.chat("ok", "!human");
   g.simulated = true;
   g.start();
   assert.equal(g.chat("ok", "!attack"), false);
@@ -146,4 +146,17 @@ test("blocklists enforced and simulated scores do not persist", () => {
   g.finish();
   assert.equal(g.stream.red, 1);
   assert.equal(g.season.red, 0);
+});
+
+test("human and zombie join commands replace color commands and preserve score keys", () => {
+  const g = new Game({ season: { red: 2, blue: 3 } });
+  assert.equal(g.chat("alice", "!HUMAN"), true);
+  assert.equal(g.chat("bob", "!zombie"), true);
+  assert.equal(g.players.get("alice"), "red");
+  assert.equal(g.players.get("bob"), "blue");
+  assert.equal(g.chat("old", "!red"), false);
+  assert.equal(g.chat("old", "!blue"), false);
+  assert.deepEqual(g.season, { red: 2, blue: 3 });
+  g.say("red attacks · BLUE defends");
+  assert.equal(g.last, "HUMANS attack · ZOMBIES defend");
 });

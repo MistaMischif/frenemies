@@ -13,7 +13,7 @@ Deployed October 26, 2026: **https://frenemies-u3n4.onrender.com**. Public sourc
 1. Open the deployed home page and choose **Connect your Twitch channel**.
 2. Sign into the broadcaster account and authorize the read-only scopes. The selected channel is the broadcaster's own channel; there is no access to other channels.
 3. Copy the overlay URL from controls. In OBS add a Browser Source, paste the URL, and set 1920×1080 or 1280×720.
-4. Keep `/control` open in the signed-in browser. Tell chat to type `!red` or `!blue`, then `!attack`, `!defend`, `!heal` or `!surge`.
+4. Keep `/control` open in the signed-in browser. Tell chat to type `!human` or `!zombie`, then `!attack`, `!defend`, `!heal` or `!surge`.
 5. Click **Start battle**. Use Pause/Resume, Next battle, battlefield events, or the red kill-switch. Kill pauses voting and makes the overlay transparent. Resume restores it.
 
 This five-minute flow assumes the operator has already deployed and registered the Twitch application. Initial developer account/hosting setup takes longer. Setup timing has not yet been measured with a stranger.
@@ -130,3 +130,6 @@ Barrage is an optional Twitch Extension integration, **disabled pending Twitch s
 
 See `submission/BARRAGE-SETUP.md` for the package, credentials, live gate, retention and rollout limitations. The simulated demo has a **Simulate Barrage · no Bits** button; it is unavailable in real channels. Simulated shots do not constitute real transaction evidence. Existing follow/subscription/channel-point effects remain separate.
 
+
+
+Character artwork: seven PNGs supplied by the project owner, served unchanged from public/characters. Human and Zombie presentation retain existing red/blue storage keys to preserve scores. Join commands: !human and !zombie.

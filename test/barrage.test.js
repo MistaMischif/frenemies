@@ -19,8 +19,8 @@ async function setup(fn) {
 }
 const room = () => {
   const game = new Game({ host: "host" });
-  game.chat("r", "!red");
-  game.chat("b", "!blue");
+  game.chat("r", "!human");
+  game.chat("b", "!zombie");
   game.start();
   return { id: "123", game };
 };

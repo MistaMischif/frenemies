@@ -10,6 +10,15 @@
     previous = performance.now(),
     w = 1000,
     h = 260;
+  const sprites = {};
+  for (const [team, names] of Object.entries({
+    red: ["char01V01", "char02V01", "char03V01"],
+    blue: ["zmb01V01", "zmb01V02", "zmb01V03", "zmb01V04"],
+  })) sprites[team] = names.map((name) => {
+    const image = new Image();
+    image.src = `/characters/${name}.png`;
+    return image;
+  });
   const color = { red: "#ff6179", blue: "#65b9ff" };
   new ResizeObserver(() => {
     const r = canvas.getBoundingClientRect(),
@@ -71,18 +80,22 @@
       ctx.fillStyle = "#546883";
       ctx.fillRect(-18 + i * 14, -h * 0.29, 8, 12);
     }
-    ctx.globalAlpha = 0.3 + (0.7 * lineStrength) / 100;
-    for (let i = 0; i < Math.min(count, 8); i++) {
-      const x = 43 + (i % 4) * 24,
-        y = i < 4 ? 0 : -34;
-      ctx.fillStyle = color[t];
-      ctx.beginPath();
-      ctx.arc(x, y - 23, 6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillRect(x - 6, y - 16, 13, 14);
-      line(x - 3, y - 2, x - 5, y + 6, color[t], 3);
-      line(x + 4, y - 2, x + 6, y + 6, color[t], 3);
-      line(x + 6, y - 12, x + 17, y - 14, "#e9f1ff", 3);
+    ctx.globalAlpha = lineStrength > 0 ? 1 : 0.35;
+    const visible = Math.min(count || (state?.status === "lobby" ? 3 : 0), 6);
+    for (let i = 0; i < visible; i++) {
+      const image = sprites[t][i % sprites[t].length];
+      if (!image.complete || !image.naturalWidth) continue;
+      const height = Math.min(h * 0.62, 120) * (i < 3 ? 0.88 : 1);
+      const width = height * image.naturalWidth / image.naturalHeight;
+      const x = 42 + (i % 3) * Math.min(42, w * 0.04);
+      const bob = !reduced.matches && state?.status === "running"
+        ? Math.sin(clock / 240 + i * 1.6) * 2 : 0;
+      ctx.save();
+      ctx.translate(x, (i < 3 ? -12 : 5) + bob);
+      // Zombies already face left; cancel the squad's mirror for their artwork.
+      if (!left) ctx.scale(-1, 1);
+      ctx.drawImage(image, -width / 2, -height, width, height);
+      ctx.restore();
     }
     ctx.globalAlpha = 1;
     if (state?.teams[t].shield) {
@@ -97,7 +110,7 @@
     }
     ctx.restore();
     text(
-      count ? "SQUAD READY" : "JOIN " + (left ? "!RED" : "!BLUE"),
+      count ? "SQUAD READY" : "JOIN " + (left ? "!HUMAN" : "!ZOMBIE"),
       base,
       ground + 27,
       11,
@@ -142,7 +155,7 @@
         text("BARRAGE · " + e.name, w / 2, 38, Math.min(18, w / 45), "#e6ff95");
     } else if (e.kind === "victory") {
       text(
-        e.team === "draw" ? "DRAW" : e.team.toUpperCase() + " VICTORY",
+        e.team === "draw" ? "DRAW" : (e.team === "red" ? "HUMANS" : "ZOMBIES") + " VICTORY",
         w / 2,
         h * 0.42,
         Math.min(38, w / 20),

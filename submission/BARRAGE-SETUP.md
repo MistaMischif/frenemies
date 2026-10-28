@@ -47,3 +47,6 @@ Original code-drawn squads and forts, projectiles, impact rings, shields, heal/s
 - https://dev.twitch.tv/docs/extensions/guidelines-and-policies/
 - https://dev.twitch.tv/docs/api/reference/#get-extension-transactions
 
+
+
+October 28 character update: local Extension ZIP rebuilt with !human / !zombie instructions; Twitch-hosted upload still uses the prior bundle until replaced. Battlefield now uses owner-supplied Human/Zombie PNGs, up to six figures per side.

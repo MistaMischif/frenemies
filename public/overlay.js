@@ -37,9 +37,9 @@ function render(s) {
   }
   el("event").textContent = s.last;
   el("stream").textContent =
-    `${s.simulated ? "SIMULATED SESSION" : "THIS STREAM"} · RED ${s.stream.red} : ${s.stream.blue} BLUE`;
+    `${s.simulated ? "SIMULATED SESSION" : "THIS STREAM"} · HUMANS ${s.stream.red} : ${s.stream.blue} ZOMBIES`;
   el("season").textContent =
-    `SEASON · RED ${s.season.red} : ${s.season.blue} BLUE`;
+    `SEASON · HUMANS ${s.season.red} : ${s.season.blue} ZOMBIES`;
 }
 function connect() {
   socket = new WebSocket(

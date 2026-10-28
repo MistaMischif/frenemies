@@ -267,8 +267,8 @@ app.post("/demo", (req, res) => {
   req.session.owner = id;
   req.session.csrf = randomBytes(24).toString("hex");
   room.expires = Date.now() + 12 * 3600000;
-  for (let i = 0; i < 12; i++) room.game.chat("sim_red_" + i, "!red");
-  for (let i = 0; i < 6; i++) room.game.chat("sim_blue_" + i, "!blue");
+  for (let i = 0; i < 12; i++) room.game.chat("sim_red_" + i, "!human");
+  for (let i = 0; i < 6; i++) room.game.chat("sim_blue_" + i, "!zombie");
   res.redirect(303, "/control");
 });
 const owner = (req, res, next) => {

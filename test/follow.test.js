@@ -43,12 +43,12 @@ test("follow eligibility, stable identity, storage failure and round boundary", 
     applyEvent(room, "channel.follow", { user_login, user_id });
   await follow();
   assert.equal(claims.size, 0);
-  game.chat("r", "!red");
+  game.chat("r", "!human");
   game.start();
   game.teams.red.line = 50;
   await Promise.all([follow(), follow()]);
   assert.equal(game.teams.red.line, 52);
-  game.chat("renamed", "!red");
+  game.chat("renamed", "!human");
   await follow("renamed");
   assert.equal(game.teams.red.line, 52);
   room.claimFollow = async () => {

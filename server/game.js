@@ -28,7 +28,7 @@ export class Game {
     this.teams = { red: team(), blue: team() };
     this.votes = new Map();
     this.active = new Set();
-    this.last = "Pick a team: !red or !blue";
+    this.last = "Pick a team: !human or !zombie";
     this.events = [];
     this.fogUntil = 0;
     this.freezeUntil = 0;
@@ -77,6 +77,7 @@ export class Game {
     return true;
   }
   say(text) {
+    text = text.replace(/\bred\b/gi, "HUMANS").replace(/\bblue\b/gi, "ZOMBIES").replace(/(HUMANS|ZOMBIES) (attacks|defends|heals|surges)/g, (_, team, verb) => `${team} ${verb.slice(0, -1)}`);
     this.last = text;
     this.events.unshift(text);
     this.events = this.events.slice(0, 5);
@@ -134,9 +135,10 @@ export class Game {
       this.blockedCommands.has(text)
     )
       return false;
-    const cmd = text.slice(1);
+    const raw = text.slice(1);
+    const cmd = raw === "human" ? "red" : raw === "zombie" ? "blue" : raw;
     if (!text.startsWith("!")) return false;
-    if (TEAMS.includes(cmd)) {
+    if (["human", "zombie"].includes(raw)) {
       if (
         (this.status === "running" || this.status === "paused") &&
         this.players.has(name)
