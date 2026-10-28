@@ -101,7 +101,17 @@ export function connectChat(room, tokens) {
         const m = line.match(
           /^(?:@([^ ]+) )?:([^! ]+)!\S+ PRIVMSG #[^ ]+ :(.*)$/,
         );
-        if (m) room.game.chat(m[2], m[3]);
+        if (m) {
+          const userId = m[1]
+            ?.split(";")
+            .find((x) => x.startsWith("user-id="))
+            ?.slice(8);
+          if (userId && /^\d+$/.test(userId))
+            room.userNames.set(userId, m[2].toLowerCase());
+          if (m[3].trim().toLowerCase() === "!barrage" && userId)
+            room.barrage(userId, m[2].toLowerCase());
+          else room.game.chat(m[2], m[3]);
+        }
         if (line.includes(" CLEARCHAT ") || line.includes(" CLEARMSG ")) {
           room.game.events = [];
           room.game.last = "Chat moderation applied";

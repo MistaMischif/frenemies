@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Frenemies · Barrage</title>
+    <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+    <link rel="stylesheet" href="panel.css" />
+    <script src="panel.js" defer></script>
+  </head>
+  <body>
+    <main>
+      <span class="eyebrow">FRENEMIES / FREE TO PLAY</span>
+      <h1>Your chat.<br />Your battlefield.</h1>
+      <p>
+        Join with <b>!red</b> or <b>!blue</b> in chat.<br />Play with !attack ·
+        !defend · !heal · !surge.
+      </p>
+      <section>
+        <span class="eyebrow">OPTIONAL TEAM BOOST</span>
+        <h2>☄ Barrage</h2>
+        <p>
+          Three extra shots. Two seconds apart.<br />3 damage each; shields
+          halve a shot.<br />One volley per team every 30 seconds.
+        </p>
+        <p id="balance">Connecting to Twitch…</p>
+        <button id="identify" hidden>Link Twitch identity</button
+        ><button id="bits" disabled>Activate Barrage · 100 Bits</button
+        ><button id="fire" disabled>Fire saved shots</button>
+        <p class="small">
+          Unused shots stay saved for this channel. Type !barrage or use “Fire
+          saved shots” during a battle. Basic chat actions always stay free.
+        </p>
+        <p id="message" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+  </body>
+</html>

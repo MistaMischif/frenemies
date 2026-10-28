@@ -6,6 +6,8 @@
     <title>Frenemies — Battle overlay</title>
     <link rel="stylesheet" href="/style.css" />
     <script src="/overlay.js" defer></script>
+    <script src="/battlefield.js" defer></script>
+    <link rel="stylesheet" href="/battlefield.css" />
   </head>
   <body>
     <main class="arena" id="arena">
@@ -51,6 +53,13 @@
           <div class="flags" id="blue-flags"></div>
           <div class="votes" id="blue-votes"></div>
         </article>
+      </section>
+      <section
+        class="battlefield"
+        aria-label="Animated Red versus Blue battlefield. Exact player counts are shown above."
+      >
+        <canvas id="battlefield"></canvas>
+        <span class="field-label">CHAT COMMANDS → LIVE BATTLE</span>
       </section>
       <div class="event" id="event" aria-live="polite">
         Pick your team. Hold your line.

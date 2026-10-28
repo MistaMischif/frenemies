@@ -1,6 +1,7 @@
 const el = (id) => document.getElementById(id);
 let socket;
 function render(s) {
+  window.dispatchEvent(new CustomEvent("battle-state", { detail: s }));
   document.body.classList.toggle("killed", s.cleared);
   el("arena").classList.toggle("cleared", s.cleared);
   el("connection").hidden = s.cleared;

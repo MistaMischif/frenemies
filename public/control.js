@@ -9,6 +9,7 @@ async function update() {
       );
     const d = await r.json();
     csrf = d.csrf;
+    el("demo-barrage").hidden = !d.state.simulated;
     el("mode").textContent = d.state.simulated ? "SIMULATED CHAT" : "";
     el("channel").textContent = `Channel: ${d.channel}`;
     el("overlay").value = d.overlay;
@@ -16,7 +17,7 @@ async function update() {
     el("state").textContent =
       `${d.state.status.toUpperCase()} · ${d.state.remaining}s · ${d.state.last}`;
     el("integration").textContent =
-      `Chat: ${d.integration.chat}\nScores: ${d.integration.storage}\n` +
+      `Chat: ${d.integration.chat}\nScores: ${d.integration.storage}\nBarrage: ${d.barrage}\n` +
       d.integration.subscriptions
         .map((s) => `${s.type}: ${s.status}`)
         .join("\n");

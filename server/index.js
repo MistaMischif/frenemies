@@ -9,6 +9,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Game } from "./game.js";
 import { openStorage } from "./storage.js";
+import { openBarrageLedger, BarrageRunner } from "./barrage.js";
+import { createExtension } from "./extension.js";
 import {
   SCOPES,
   token,
@@ -40,6 +42,11 @@ const storage = await openStorage({
   dataDir,
 });
 const persisted = storage.data;
+const barrageLedger = await openBarrageLedger({
+  databaseUrl: process.env.DATABASE_URL,
+  dataDir,
+});
+const barrageRunner = new BarrageRunner(barrageLedger);
 const rooms = new Map(),
   seen = new Map();
 const writes = new Map();
@@ -77,6 +84,7 @@ function makeRoom(id, login, simulated = false) {
     id,
     login,
     overlay: old.overlay,
+    userNames: new Map(),
     claimFollow: (userId) => storage.claimFollow(id, userId),
     integration: {
       chat: simulated ? "SIMULATED" : "not connected",
@@ -95,6 +103,10 @@ function makeRoom(id, login, simulated = false) {
     blockedCommands: (process.env.BLOCKED_COMMANDS || "").split(","),
   });
   room.game.simulated = simulated;
+  room.barrage = (user, name) =>
+    barrageRunner
+      .activate(room, user, name)
+      .catch(() => room.game.say("Barrage unavailable; saved shots are safe."));
   rooms.set(id, room);
   return room;
 }
@@ -167,6 +179,14 @@ app.post("/eventsub", async (req, res) => {
 });
 app.use(express.json({ limit: "8kb" }));
 app.use(express.urlencoded({ extended: false, limit: "8kb" }));
+const extension = createExtension({
+  ledger: barrageLedger,
+  runner: barrageRunner,
+  rooms,
+});
+extension.mount(app);
+extension.reconcile();
+setInterval(() => extension.reconcile(), 300000).unref();
 app.use(
   session({
     name: "frenemies.sid",
@@ -266,6 +286,7 @@ app.get("/api/control", owner, (req, res) =>
     overlay: `${base}/overlay/${req.room.overlay}`,
     control: `${base}/control`,
     integration: req.room.integration,
+    barrage: barrageRunner.error || extension.status(),
     state: req.room.game.snapshot(),
   }),
 );
@@ -278,7 +299,15 @@ app.post("/api/control", owner, (req, res) => {
   else if (action === "pause") g.pause();
   else if (action === "kill") g.kill();
   else if (["supply", "fog", "freeze"].includes(action)) g.battlefield(action);
-  else return res.sendStatus(400);
+  else if (action === "demo-barrage" && g.simulated) {
+    if (g.canBarrage("sim_red_0")) {
+      const id = "demo-" + randomBytes(12).toString("hex");
+      barrageLedger
+        .grant(id, req.room.id, "demo")
+        .then(() => barrageRunner.activate(req.room, "demo", "sim_red_0"))
+        .catch(() => g.say("Demo Barrage unavailable"));
+    }
+  } else return res.sendStatus(400);
   broadcast(req.room);
   res.json(g.snapshot());
 });
@@ -366,6 +395,7 @@ setInterval(() => {
     g.advance(dt);
     broadcast(room);
   }
+  barrageRunner.pump();
   for (const [id, time] of seen) if (now - time > 600000) seen.delete(id);
 }, 250).unref();
 server.listen(process.env.PORT || 3000, () =>
@@ -387,5 +417,6 @@ process.on("SIGTERM", async () => {
   server.close();
   await Promise.allSettled([...writes.values()]);
   await storage.close();
+  await barrageLedger.close();
   process.exit(0);
 });

@@ -121,3 +121,11 @@ A later version may head toward the Cradle to the Grave universe with Humans vs 
 
 None implemented beyond the requested scope.
 Follow bonuses are limited to one per Twitch account per channel, using the stable Twitch user ID. Eligible claims are saved before awarding points in `frenemies_follow_claims` (or local `follow-claims.json`) and survive server restarts and season resets. Back up this table alongside scores. These IDs are retained solely to prevent repeat bonuses. A claim at full strength still counts; a pause or battle transition during saving may consume the claim without awarding points. Database failures award nothing and request delivery retry. Bonuses issued before this protection was deployed cannot be reconstructed.
+
+## Animated battlefield and optional Barrage
+
+The OBS overlay now draws squads, forts, projectiles, impacts, shields, healing/surge and victory effects from server events. All basic chat actions remain free. Exact player counts are shown numerically; graphical squad symbols are capped at eight per side. No third-party graphics or audio are used.
+
+Barrage is an optional Twitch Extension integration, **disabled pending Twitch setup, review and real transaction validation**. The prepared fixed product is `barrage_v1`, draft 100 Bits, three extra 3-damage shots spaced two seconds apart and a 30-second team cooldown. Shields halve a shot; surge does not multiply Barrage. This intentionally adds a separate paid-action path while retaining the one-free-vote rule. `!barrage` activates banked shots; the Extension also has a button. Unused shots persist by Twitch user ID/channel in `frenemies_barrage` and must be included in database backups. Viewer identity sharing is needed only for this optional feature. Free users need no Extension/account setup.
+
+See `submission/BARRAGE-SETUP.md` for the package, credentials, live gate, retention and rollout limitations. The simulated demo has a **Simulate Barrage · no Bits** button; it is unavailable in real channels. Simulated shots do not constitute real transaction evidence. Existing follow/subscription/channel-point effects remain separate.

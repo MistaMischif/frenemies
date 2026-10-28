@@ -35,6 +35,46 @@ export class Game {
     this.cleared = false;
     this.winner = null;
     this.simulated = false;
+    this.fxSequence = 0;
+    this.effects = [];
+    this.barrageReady = { red: 0, blue: 0 };
+  }
+  effect(kind, team, extra = {}) {
+    this.effects.push({ id: ++this.fxSequence, kind, team, ...extra });
+    this.effects = this.effects.slice(-32);
+  }
+  canBarrage(name) {
+    const t = this.players.get(name);
+    return (
+      this.status === "running" &&
+      this.elapsed >= this.freezeUntil &&
+      t &&
+      name !== this.host &&
+      !this.blockedNames.has(name) &&
+      !this.blockedCommands.has("!barrage") &&
+      this.elapsed >= this.barrageReady[t]
+    );
+  }
+  barrageShot(name) {
+    const t = this.players.get(name);
+    if (
+      this.status !== "running" ||
+      this.elapsed < this.freezeUntil ||
+      !t ||
+      name === this.host ||
+      this.blockedNames.has(name) ||
+      this.blockedCommands.has("!barrage")
+    )
+      return false;
+    const other = t === "red" ? "blue" : "red";
+    const damage = this.teams[other].shield ? 1.5 : 3;
+    this.teams[other].shield = false;
+    this.teams[other].line = Math.max(0, this.teams[other].line - damage);
+    this.active.add(name);
+    this.effect("barrage", t, { name, damage });
+    this.say(`BARRAGE · ${name} · ${t.toUpperCase()} fires −${damage}`);
+    if (this.teams[other].line === 0) this.finish();
+    return true;
   }
   say(text) {
     this.last = text;
@@ -56,6 +96,8 @@ export class Game {
     this.freezeUntil = 0;
     this.events = [];
     this.say("Battle started. Vote now!");
+    this.barrageReady = { red: 0, blue: 0 };
+    this.effects = [];
     return true;
   }
   pause() {
@@ -151,15 +193,18 @@ export class Game {
       const s = this.teams[t],
         cmd = selected[t];
       if (cmd === "defend") {
+        this.effect("defend", t);
         s.shield = true;
         messages.push(`${t} defends`);
       }
       if (cmd === "heal") {
+        this.effect("heal", t);
         const gain = Math.min(15, 3 + Math.floor(counts[t] / 2));
         s.line = Math.min(100, s.line + gain);
         messages.push(`${t} heals +${gain}`);
       }
       if (cmd === "surge" && this.elapsed - s.surgeAt >= 30000) {
+        this.effect("surge", t);
         s.power = true;
         s.surgeAt = this.elapsed;
         messages.push(`${t} charges a surge`);
@@ -177,6 +222,7 @@ export class Game {
       s.power = false;
       target.shield = false;
       messages.push(`${t} attacks −${damage[other]}`);
+      this.effect("attack", t, { damage: damage[other] });
     }
     for (const t of TEAMS)
       this.teams[t].line = Math.max(0, this.teams[t].line - damage[t]);
@@ -200,6 +246,7 @@ export class Game {
               : "blue"
             : "draw";
     this.status = "finished";
+    this.effect("victory", this.winner);
     this.votes.clear();
     if (this.winner !== "draw") {
       this.stream[this.winner]++;
@@ -267,6 +314,8 @@ export class Game {
       winner: this.winner,
       cleared: this.cleared,
       simulated: this.simulated,
+      effects: this.effects,
+      barrageReady: this.barrageReady,
       elapsed: this.elapsed,
       fog: Math.max(0, Math.ceil((this.fogUntil - this.elapsed) / 1000)),
       freeze: Math.max(0, Math.ceil((this.freezeUntil - this.elapsed) / 1000)),

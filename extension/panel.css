@@ -1,0 +1,76 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #0b1120;
+  color: #f0f5ff;
+  font:
+    15px/1.55 system-ui,
+    sans-serif;
+}
+main {
+  padding: 20px;
+  max-width: 480px;
+  margin: auto;
+}
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #d9fb7b;
+  font-weight: 800;
+}
+h1 {
+  font-size: 32px;
+  line-height: 1.05;
+  letter-spacing: -1px;
+}
+h2 {
+  font-size: 28px;
+  margin: 10px 0;
+}
+p {
+  color: #bdc8dc;
+}
+b {
+  color: white;
+}
+section {
+  border: 1px solid #3e4b67;
+  border-radius: 14px;
+  padding: 18px;
+  background: linear-gradient(135deg, #202a44, #111827);
+}
+button {
+  width: 100%;
+  padding: 13px;
+  margin: 5px 0;
+  border: 0;
+  border-radius: 7px;
+  background: #d9fb7b;
+  color: #111827;
+  font-weight: 800;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+button:focus-visible {
+  outline: 3px solid #8cbcff;
+  outline-offset: 3px;
+}
+#fire {
+  background: #34466c;
+  color: white;
+}
+.small,
+#message {
+  font-size: 12px;
+}
+#message {
+  color: #ffe29c;
+}
+[hidden] {
+  display: none !important;
+}
