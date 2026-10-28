@@ -97,7 +97,15 @@ el("copy-instructions").addEventListener("click", (e) => copyText(el("chat-instr
 let environmentCatalog = [], environmentSignature = "";
 function environmentPreview() {
   const choice = environmentCatalog.find(e => e.id === el("environment-choice").value);
-  el("environment-preview").hidden = !choice?.url;
+  const scenic=window.FrenemiesScenes.has(choice?.id);
+  const canvas=el("scene-preview"); canvas.hidden=!scenic;
+  if(scenic) window.FrenemiesScenes.ready.then(() => {
+    if(el("environment-choice").value!==choice.id) return;
+    const ctx=canvas.getContext("2d");
+    window.FrenemiesScenes.background(ctx,canvas.width,canvas.height,choice.id);
+    window.FrenemiesScenes.foreground(ctx,canvas.width,canvas.height,choice.id);
+  });
+  el("environment-preview").hidden = scenic || !choice?.url;
   if (choice?.url) el("environment-preview").src = choice.url;
 }
 function updateEnvironments(d) {
@@ -106,13 +114,13 @@ function updateEnvironments(d) {
   if (signature !== environmentSignature) {
     const previous = el("environment-choice").value;
     el("environment-choice").replaceChildren(...environmentCatalog.map(e => {
-      const option = document.createElement("option"); option.value = e.id; option.textContent = e.name; return option;
+      const option = document.createElement("option"); option.value = e.id; option.textContent = window.FrenemiesScenes.has(e.id) ? window.FrenemiesScenes.title(e.id) : e.name; return option;
     }));
     el("environment-choice").value = environmentCatalog.some(e => e.id === previous) ? previous : d.nextEnvironment;
     environmentSignature = signature;
     environmentPreview();
   }
-  el("environment-current").textContent = `Current battle: ${d.state.environment?.name || "Neon battlefield"} · Next battle: ${environmentCatalog.find(e => e.id === d.nextEnvironment)?.name || "Neon battlefield"}`;
+  el("environment-current").textContent = `Current battle: ${window.FrenemiesScenes.has(d.state.environment?.id) ? window.FrenemiesScenes.title(d.state.environment.id) : d.state.environment?.name || "Neon battlefield"} · Next battle: ${window.FrenemiesScenes.has(d.nextEnvironment) ? window.FrenemiesScenes.title(d.nextEnvironment) : environmentCatalog.find(e => e.id === d.nextEnvironment)?.name || "Neon battlefield"}`;
 }
 async function saveEnvironment(body) {
   const response = await fetch("/api/environments", {method:"POST", headers:{"Content-Type":"application/json", "X-CSRF-Token":csrf}, body:JSON.stringify(body)});

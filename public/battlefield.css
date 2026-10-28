@@ -130,3 +130,5 @@
     font-size: 14px;
   }
 }
+
+.field-label { color:#e2ebdc; background:#0b182bc9; padding:5px 8px; border-radius:4px; }

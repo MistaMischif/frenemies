@@ -141,3 +141,7 @@ Persistent characters, settlement chapters, infection/recovery, Twitch convoy ob
 
 ## Battle environments (1.2.0)
 Streamer controls now support assigning a built-in scene or uploaded artwork to the next battle. Active battles keep their current scene. See releases/1.2.0/README.md for image limits, persistence and self-hosting.
+
+## C2G battle scenes (1.3.0)
+
+Choose **C2G Woodland clearing** or **C2G Settlement outskirts** in Next battle environment, then assign and start the next battle. Original C2G trees, grass, rocks and a house are composed in depth around a clear combat lane. The control preview uses the same scene renderer. Existing forest/ruins selections now use these compositions. Custom uploads and Neon battlefield remain available. No new service or dependency is required.

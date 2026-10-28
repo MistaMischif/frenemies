@@ -48,7 +48,7 @@
       if (environmentUrl) { environmentImage = new Image(); environmentImage.src = environmentUrl; }
     }
     const label = document.querySelector(".field-label");
-    if (label) label.textContent = s.environment?.name || "NEON BATTLEFIELD";
+    if (label) label.textContent = window.FrenemiesScenes.has(s.environment?.id) ? window.FrenemiesScenes.title(s.environment.id) : s.environment?.name || "NEON BATTLEFIELD";
   });
   const line = (x, y, x2, y2, c, width = 2) => {
     ctx.strokeStyle = c;
@@ -99,6 +99,9 @@
       const bob = !reduced.matches && state?.status === "running"
         ? Math.sin(clock / 240 + i * 1.6) * 2 : 0;
       ctx.save();
+      // Contact shadows stay grounded when the actor bobs.
+      ctx.fillStyle = "#101b1c55";
+      ctx.beginPath(); ctx.ellipse(x, (i < 3 ? -12 : 5), width*.34, Math.max(2,height*.035), 0, 0, Math.PI*2); ctx.fill();
       ctx.translate(x, (i < 3 ? -12 : 5) + bob);
       // Zombies already face left; cancel the squad's mirror for their artwork.
       if (!left) ctx.scale(-1, 1);
@@ -199,18 +202,22 @@
       g.addColorStop(1, "#152e46");
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
-      if (environmentImage?.complete && environmentImage.naturalWidth) {
+      const scenic = window.FrenemiesScenes.background(ctx, w, h, state?.environment?.id);
+      if (!scenic && environmentImage?.complete && environmentImage.naturalWidth) {
         const scale = Math.max(w / environmentImage.naturalWidth, h / environmentImage.naturalHeight);
         const width = environmentImage.naturalWidth * scale, height = environmentImage.naturalHeight * scale;
         ctx.drawImage(environmentImage, (w - width) / 2, (h - height) / 2, width, height);
         ctx.fillStyle = "#09101a55"; ctx.fillRect(0, 0, w, h);
       }
+      if (!scenic) {
       for (let x = 0; x < w; x += 50)
         line(x, h * 0.78, x + w * 0.03, h, "#25344a", 1);
       line(0, h * 0.78, w, h * 0.78, "#42536e", 2);
       line(w / 2, h * 0.2, w / 2, h * 0.88, "#45526a", 1);
+      }
       squad("red");
       squad("blue");
+      window.FrenemiesScenes.foreground(ctx, w, h, state?.environment?.id);
       effects = effects.filter(
         (e) => clock - e.start < (e.kind === "victory" ? 4000 : 1500),
       );

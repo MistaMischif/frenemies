@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Frenemies — Streamer controls</title>
     <link rel="stylesheet" href="/style.css" />
+    <script src="/environment-scenes.js" defer></script>
     <script src="/control.js" defer></script>
   </head>
   <body>
@@ -40,6 +41,7 @@
         <select id="environment-choice"></select>
         <button id="assign-environment">Assign to next battle</button>
         <p id="environment-current" class="mini"></p>
+        <canvas id="scene-preview" width="1200" height="260" aria-label="Layered environment preview" hidden></canvas>
         <img id="environment-preview" alt="Selected environment preview" hidden />
         <form id="environment-upload">
           <label for="environment-name">New environment name</label>

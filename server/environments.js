@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 export const DEFAULT_ENVIRONMENT = { id: "default", name: "Neon battlefield", url: null };
 export const BUILTIN_ENVIRONMENTS = [DEFAULT_ENVIRONMENT,
- {id:"ruins", name:"Abandoned city", url:"/environments/ruins.svg"},
- {id:"forest", name:"Quarantine forest", url:"/environments/forest.svg"}];
+ {id:"ruins", name:"C2G · Settlement outskirts", url:"/environments/ruins.svg"},
+ {id:"forest", name:"C2G · Woodland clearing", url:"/environments/forest.svg"}];
 export function parseEnvironmentUpload(body) {
  const name=String(body.name || "").trim();
  if (!name || name.length>50) throw new Error("Name must be 1–50 characters.");
