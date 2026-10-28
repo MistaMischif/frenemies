@@ -36,3 +36,7 @@ Still pending: genuine EventSub effect, persistence verified after restart, uneq
 ## Follow protection deployment and persistence — October 26, 2026
 
 Deployed commit 8f95615 on Render Free. All 14 automated tests passed. Production startup successfully initialized the durable follow-claim table. After reconnecting Twitch, the same overlay URL showed SEASON RED 0 : 1 BLUE, while THIS STREAM reset to 0 : 0 as designed. Evidence: real-season-after-restart.jpg. This verifies season-score persistence after a real battle and service replacement. The persistent follow limit is deployed; a genuine post-patch follow effect remains unverified.
+
+## Animated overlay and Barrage — October 27, 2026
+
+21 automated tests pass, including the Extension HTTP boundary, forged/expired identities, wrong viewer/channel claims, duplicate transactions, durable balances, pending-shot recovery, cooldowns, shields, pause/freeze and battle-ending interruption. Local 1280×720 browser test showed animated attacks and Barrage, no console errors, and kill cleared the entire overlay. Screenshots animated-battle-simulated.jpg and animated-barrage-simulated.jpg are explicitly simulated. Twitch Extension registration/credentials, real Bits transaction and Twitch mobile testing remain pending; the paid feature is disabled by default.
