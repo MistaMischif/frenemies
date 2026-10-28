@@ -137,3 +137,7 @@ Character artwork: seven PNGs supplied by the project owner, served unchanged fr
 
 ## Outbreak campaign (1.1.0)
 Persistent characters, settlement chapters, infection/recovery, Twitch convoy objectives and a living chronicle are now included. See releases/1.1.0/README.md for mechanics, commands, self-hosting, and test limitations. !status displays progress on the overlay; !rescue spends free-earned community supplies between battles.
+
+
+## Battle environments (1.2.0)
+Streamer controls now support assigning a built-in scene or uploaded artwork to the next battle. Active battles keep their current scene. See releases/1.2.0/README.md for image limits, persistence and self-hosting.

@@ -376,3 +376,6 @@ body.killed {
 .battle-events li:first-child { color: #d9fb7b; }
 
 .campaign-strip { font-size: clamp(12px, 1.1vw, 18px); padding-top: 8px; color: #e3efba; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+select { background: #080d17; color: #e6ebf8; border: 1px solid #414d67; padding: 12px; border-radius: 5px; margin: 8px 12px 8px 0; max-width: 100%; }
+#environment-preview { display:block; width:100%; max-height:200px; object-fit:cover; border-radius:8px; margin:12px 0; }

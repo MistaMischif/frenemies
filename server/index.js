@@ -1,4 +1,5 @@
 import express from "express";
+import { environmentList, parseEnvironmentUpload } from "./environments.js";
 import { Campaign } from "./campaign.js";
 import session from "express-session";
 import helmet from "helmet";
@@ -86,6 +87,8 @@ function makeRoom(id, login, simulated = false) {
     login,
     overlay: old.overlay,
     userNames: new Map(),
+    environmentAssets: old.environments || [],
+    nextEnvironment: old.nextEnvironment || "default",
     claimFollow: (userId) => storage.claimFollow(id, userId),
     integration: {
       chat: simulated ? "SIMULATED" : "not connected",
@@ -210,6 +213,7 @@ app.post("/eventsub", async (req, res) => {
   seen.set(id, Date.now());
   res.sendStatus(204);
 });
+app.use("/api/environments", express.json({ limit: "750kb" }));
 app.use(express.json({ limit: "8kb" }));
 app.use(express.urlencoded({ extended: false, limit: "8kb" }));
 const extension = createExtension({
@@ -320,6 +324,8 @@ app.get("/api/control", owner, (req, res) =>
     control: `${base}/control`,
     integration: req.room.integration,
     barrage: barrageRunner.error || extension.status(),
+    environments: environmentList(req.room),
+    nextEnvironment: req.room.nextEnvironment,
     state: req.room.game.snapshot(),
   }),
 );
@@ -328,7 +334,13 @@ app.post("/api/control", owner, (req, res) => {
     return res.sendStatus(403);
   const g = req.room.game;
   const action = req.body.action;
-  if (action === "start" || action === "next") g.start();
+  if ((action === "start" || action === "next") && req.room.environmentSaving) return res.status(409).json({error:"Wait for the environment to finish saving."});
+  if (action === "start" || action === "next") {
+    if (!["running", "paused"].includes(g.status)) {
+      g.environment = environmentList(req.room).find(e => e.id === req.room.nextEnvironment) || environmentList(req.room)[0];
+      g.start();
+    }
+  }
   else if (action === "pause") g.pause();
   else if (action === "kill") g.kill();
   else if (["supply", "fog", "freeze"].includes(action)) g.battlefield(action);
@@ -346,6 +358,44 @@ app.post("/api/control", owner, (req, res) => {
   } else return res.sendStatus(400);
   broadcast(req.room);
   res.json(g.snapshot());
+});
+app.post("/api/environments", owner, async (req, res) => {
+  if (!req.session.csrf || req.get("x-csrf-token") !== req.session.csrf) return res.sendStatus(403);
+  const room = req.room;
+  if (room.environmentSaving) return res.status(409).json({error:"Wait for the current environment save."});
+  room.environmentSaving = true;
+  const previous = room.nextEnvironment;
+  let added;
+  try {
+    if (req.body.action === "upload") {
+      if (room.environmentAssets.length >= 8) return res.status(400).json({error:"Library limit: 8 uploaded environments."});
+      added = parseEnvironmentUpload(req.body);
+      room.environmentAssets.push(added);
+      room.nextEnvironment = added.id;
+    } else if (req.body.action === "select" && environmentList(room).some(e => e.id === req.body.id)) {
+      room.nextEnvironment = req.body.id;
+    } else return res.status(400).json({error:"Choose an environment from the library."});
+    if (!room.game.simulated) {
+      persisted[room.id].environments = room.environmentAssets;
+      persisted[room.id].nextEnvironment = room.nextEnvironment;
+      await save(room.id);
+    }
+    res.json({nextEnvironment:room.nextEnvironment});
+  } catch (error) {
+    room.nextEnvironment = previous;
+    if (added) room.environmentAssets.splice(room.environmentAssets.indexOf(added), 1);
+    if (!room.game.simulated) {
+      persisted[room.id].environments = room.environmentAssets;
+      persisted[room.id].nextEnvironment = previous;
+    }
+    res.status(400).json({error:added ? "Could not save artwork. Please retry." : error.message});
+  } finally { room.environmentSaving = false; }
+});
+app.get("/environment/:key/:id", (req, res) => {
+  const room = [...rooms.values()].find(r => r.overlay === req.params.key);
+  const asset = room?.environmentAssets.find(a => a.id === req.params.id);
+  if (!asset) return res.sendStatus(404);
+  res.set("Cache-Control", "private, max-age=86400").type("image/jpeg").send(Buffer.from(asset.image.split(",")[1], "base64"));
 });
 app.get("/control", (_, res) =>
   res.sendFile(path.join(root, "public/control.html")),

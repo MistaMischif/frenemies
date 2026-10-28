@@ -35,6 +35,23 @@
         </div>
       </div>
       <section class="panel">
+        <h2>Next battle environment</h2>
+        <label for="environment-choice">Choose artwork</label>
+        <select id="environment-choice"></select>
+        <button id="assign-environment">Assign to next battle</button>
+        <p id="environment-current" class="mini"></p>
+        <img id="environment-preview" alt="Selected environment preview" hidden />
+        <form id="environment-upload">
+          <label for="environment-name">New environment name</label>
+          <input id="environment-name" maxlength="50" placeholder="Hospital rooftop" required />
+          <label for="environment-file">Background artwork · PNG, JPEG or WebP</label>
+          <input id="environment-file" type="file" accept="image/png,image/jpeg,image/webp" required />
+          <button id="upload-environment" type="submit">Upload and assign to next battle</button>
+        </form>
+        <p class="mini">Wide images work best (about 5:1). Artwork fills the battlefield behind the characters and may be cropped. Up to 8 uploads; each is resized to at most 1600 × 900 and compressed. Live-channel libraries persist across restarts; demo uploads are temporary. Uploaded art is visible to anyone with your overlay link.</p>
+        <p id="environment-status" role="status"></p>
+      </section>
+      <section class="panel">
         <div class="row"><h2>Live battlefield</h2><span class="mini">The same view your audience sees</span></div>
         <div id="preview-stage" class="preview-stage"><iframe id="battle-preview" title="Live animated battle preview"></iframe></div>
         <h3>Latest actions</h3>

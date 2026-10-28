@@ -19,6 +19,7 @@
     image.src = `/characters/${name}.png`;
     return image;
   });
+  let environmentImage, environmentUrl;
   const color = { red: "#ff6179", blue: "#65b9ff" };
   new ResizeObserver(() => {
     const r = canvas.getBoundingClientRect(),
@@ -41,6 +42,13 @@
         }
     round = s.round;
     state = s;
+    if (environmentUrl !== s.environment?.url) {
+      environmentUrl = s.environment?.url;
+      environmentImage = null;
+      if (environmentUrl) { environmentImage = new Image(); environmentImage.src = environmentUrl; }
+    }
+    const label = document.querySelector(".field-label");
+    if (label) label.textContent = s.environment?.name || "NEON BATTLEFIELD";
   });
   const line = (x, y, x2, y2, c, width = 2) => {
     ctx.strokeStyle = c;
@@ -191,6 +199,12 @@
       g.addColorStop(1, "#152e46");
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
+      if (environmentImage?.complete && environmentImage.naturalWidth) {
+        const scale = Math.max(w / environmentImage.naturalWidth, h / environmentImage.naturalHeight);
+        const width = environmentImage.naturalWidth * scale, height = environmentImage.naturalHeight * scale;
+        ctx.drawImage(environmentImage, (w - width) / 2, (h - height) / 2, width, height);
+        ctx.fillStyle = "#09101a55"; ctx.fillRect(0, 0, w, h);
+      }
       for (let x = 0; x < w; x += 50)
         line(x, h * 0.78, x + w * 0.03, h, "#25344a", 1);
       line(0, h * 0.78, w, h * 0.78, "#42536e", 2);

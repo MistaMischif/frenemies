@@ -308,6 +308,7 @@ export class Game {
   }
   snapshot() {
     return {
+      environment: this.environment || { id: "default", name: "Neon battlefield", url: null },
       campaign: this.campaign?.snapshot(),
       status: this.status,
       round: this.round,

@@ -83,6 +83,13 @@ test("HTTP authorization, CSRF, webhook signature/replay and persistent score lo
       ).status,
       403,
     );
+    const envPost = (body, token = state.csrf) => fetch(origin + "/api/environments", {
+      method:"POST", headers:{Cookie:cookie,"Content-Type":"application/json","X-CSRF-Token":token}, body:JSON.stringify(body)
+    });
+    assert.equal((await envPost({action:"select",id:"forest"},"wrong")).status,403);
+    assert.equal((await envPost({action:"select",id:"missing"})).status,400);
+    assert.equal((await envPost({action:"upload",name:"Unsafe",image:"data:image/svg+xml;base64,PHN2Zz4="})).status,400);
+    assert.equal((await envPost({action:"select",id:"forest"})).status,200);
     const action = await fetch(origin + "/api/control", {
       method: "POST",
       headers: {
@@ -93,6 +100,12 @@ test("HTTP authorization, CSRF, webhook signature/replay and persistent score lo
       body: '{"action":"start"}',
     });
     assert.equal(action.status, 200);
+    assert.equal((await action.json()).environment.id,"forest");
+    assert.equal((await envPost({action:"select",id:"ruins"})).status,200);
+    const envState=await (await fetch(origin+"/api/control",{headers:{Cookie:cookie}})).json();
+    assert.equal(envState.nextEnvironment,"ruins");
+    assert.equal(envState.state.environment.id,"forest");
+    assert.equal((await fetch(origin+"/environment/not-an-overlay/not-an-id")).status,404);
     const snapshot = await new Promise((resolve, reject) => {
       const ws = new WebSocket(
         "ws://localhost:43127/?overlay=test-read-only-overlay",
