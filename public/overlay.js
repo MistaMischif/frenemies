@@ -36,6 +36,9 @@ function render(s) {
       : "VOTE TOTALS HIDDEN";
   }
   el("event").textContent = s.last;
+  const campaign = s.campaign;
+  el("campaign-strip").textContent = campaign
+    ? `CHAPTER ${campaign.chapter} · REFUGE ${campaign.settlement}/100 · SUPPLIES ${campaign.supplies} · ${campaign.objective?.title || campaign.chronicle[0]?.text || "Your community's story starts here"}` : "";
   el("stream").textContent =
     `${s.simulated ? "SIMULATED SESSION" : "THIS STREAM"} · HUMANS ${s.stream.red} : ${s.stream.blue} ZOMBIES`;
   el("season").textContent =

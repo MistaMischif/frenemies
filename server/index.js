@@ -1,4 +1,5 @@
 import express from "express";
+import { Campaign } from "./campaign.js";
 import session from "express-session";
 import helmet from "helmet";
 import { WebSocketServer } from "ws";
@@ -33,7 +34,7 @@ const base = (
   "http://localhost:3000"
 ).replace(/\/$/, "");
 const dataDir = path.resolve(process.env.DATA_DIR || path.join(root, "data"));
-if (production && !process.env.DATABASE_URL)
+if (production && !process.env.DATABASE_URL && process.env.ALLOW_LOCAL_STORAGE !== "true")
   throw new Error(
     "DATABASE_URL is required for persistent scores on free hosting",
   );
@@ -103,6 +104,37 @@ function makeRoom(id, login, simulated = false) {
     blockedCommands: (process.env.BLOCKED_COMMANDS || "").split(","),
   });
   room.game.simulated = simulated;
+  room.campaign = new Campaign(old.campaign, () => {
+    if (simulated) return;
+    persisted[id].campaign = room.campaign.data;
+    save(id);
+  });
+  room.game.campaign = room.campaign;
+  room.chat = (userId, name, text) => {
+    name = name.toLowerCase(); text = text.trim().toLowerCase();
+    if (name === room.game.host || room.game.blockedNames.has(name) || room.game.blockedCommands.has(text)) return;
+    room.campaign.identify(userId, name);
+    if (text === "!status") { const status = room.campaign.status(name); if (status) room.game.say(status); return; }
+    if (text === "!rescue") { if (room.campaign.rescue(name, room.game)) room.game.say(`${name} recovered at the clinic`); return; }
+    const character = room.campaign.data.characters[userId];
+    if (text === "!human" && character?.infected) {
+      room.game.say(`${name} is infected: use !zombie or !rescue between battles (3 supplies).`); return;
+    }
+    if (room.game.chat(name, text) && ["!human", "!zombie"].includes(text))
+      room.campaign.join(userId, name, room.game.players.get(name));
+  };
+  let eventQueue = Promise.resolve();
+  room.campaignEvent = (type, event, receipt) => {
+    const run = eventQueue.catch(() => {}).then(async () => {
+      const changed = room.campaign.event(type, event, receipt);
+      if (!changed && !room.campaign.data.receipts[receipt]) return;
+      if (!simulated) {
+        persisted[id].campaign = room.campaign.data;
+        await save(id);
+      }
+    });
+    eventQueue = run; return run;
+  };
   room.barrage = (user, name) =>
     barrageRunner
       .activate(room, user, name)
@@ -167,6 +199,7 @@ app.post("/eventsub", async (req, res) => {
       });
     else {
       try {
+        await room.campaignEvent(body.subscription.type, body.event || {}, id);
         await applyEvent(room, body.subscription.type, body.event || {});
       } catch {
         console.error("EventSub processing failed; requesting retry");
@@ -267,8 +300,8 @@ app.post("/demo", (req, res) => {
   req.session.owner = id;
   req.session.csrf = randomBytes(24).toString("hex");
   room.expires = Date.now() + 12 * 3600000;
-  for (let i = 0; i < 12; i++) room.game.chat("sim_red_" + i, "!human");
-  for (let i = 0; i < 6; i++) room.game.chat("sim_blue_" + i, "!zombie");
+  for (let i = 0; i < 12; i++) room.chat("demo-human-" + i, "sim_red_" + i, "!human");
+  for (let i = 0; i < 6; i++) room.chat("demo-zombie-" + i, "sim_blue_" + i, "!zombie");
   res.redirect(303, "/control");
 });
 const owner = (req, res, next) => {
@@ -299,6 +332,9 @@ app.post("/api/control", owner, (req, res) => {
   else if (action === "pause") g.pause();
   else if (action === "kill") g.kill();
   else if (["supply", "fog", "freeze"].includes(action)) g.battlefield(action);
+  else if (action === "demo-convoy" && g.simulated) {
+    req.room.campaign.event("channel.raid", {}, randomBytes(12).toString("hex"));
+  }
   else if (action === "demo-barrage" && g.simulated) {
     if (g.canBarrage("sim_red_0")) {
       const id = "demo-" + randomBytes(12).toString("hex");

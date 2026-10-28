@@ -10,6 +10,14 @@ async function update() {
     const d = await r.json();
     csrf = d.csrf;
     el("demo-barrage").hidden = !d.state.simulated;
+    el("demo-convoy").hidden = !d.state.simulated;
+    const campaign = d.state.campaign;
+    if (campaign) {
+      el("campaign-summary").textContent = `Chapter ${campaign.chapter} · Refuge ${campaign.settlement}/100 · ${campaign.supplies} supplies · ${campaign.population} characters · ${campaign.objective?.title || "No active convoy"}`;
+      el("chronicle").replaceChildren(...campaign.chronicle.slice(0, 10).map((entry) => {
+        const item = document.createElement("li"); item.textContent = entry.text; return item;
+      }));
+    }
     el("mode").textContent = d.state.simulated ? "SIMULATED CHAT" : "";
     el("channel").textContent = `Channel: ${d.channel}`;
     el("overlay").value = d.overlay;
@@ -57,6 +65,7 @@ document.querySelectorAll("[data-action]").forEach((b) =>
     } catch (e) {
       el("state").textContent = e.message;
     } finally {
+      b.disabled = false;
       await update();
     }
   }),

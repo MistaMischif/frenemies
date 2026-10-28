@@ -374,3 +374,5 @@ body.killed {
 .preview-stage iframe { width: 1280px; height: 720px; border: 0; transform-origin: top left; display: block; }
 .battle-events { padding-left: 24px; color: #b4bfd4; line-height: 1.8; }
 .battle-events li:first-child { color: #d9fb7b; }
+
+.campaign-strip { font-size: clamp(12px, 1.1vw, 18px); padding-top: 8px; color: #e3efba; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

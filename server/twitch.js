@@ -110,7 +110,7 @@ export function connectChat(room, tokens) {
             room.userNames.set(userId, m[2].toLowerCase());
           if (m[3].trim().toLowerCase() === "!barrage" && userId)
             room.barrage(userId, m[2].toLowerCase());
-          else room.game.chat(m[2], m[3]);
+          else if (userId) room.chat(userId, m[2], m[3]);
         }
         if (line.includes(" CLEARCHAT ") || line.includes(" CLEARMSG ")) {
           room.game.events = [];

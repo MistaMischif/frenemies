@@ -133,3 +133,7 @@ See `submission/BARRAGE-SETUP.md` for the package, credentials, live gate, reten
 
 
 Character artwork: seven PNGs supplied by the project owner, served unchanged from public/characters. Human and Zombie presentation retain existing red/blue storage keys to preserve scores. Join commands: !human and !zombie.
+
+
+## Outbreak campaign (1.1.0)
+Persistent characters, settlement chapters, infection/recovery, Twitch convoy objectives and a living chronicle are now included. See releases/1.1.0/README.md for mechanics, commands, self-hosting, and test limitations. !status displays progress on the overlay; !rescue spends free-earned community supplies between battles.

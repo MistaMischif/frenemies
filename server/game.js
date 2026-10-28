@@ -84,6 +84,10 @@ export class Game {
   }
   start() {
     if (this.status === "running" || this.status === "paused") return false;
+    for (const [name] of this.players) {
+      const character = this.campaign?.data.characters[this.campaign.names.get(name)];
+      if (character?.infected) { this.players.set(name, "blue"); character.faction = "blue"; }
+    }
     this.round++;
     this.elapsed = 0;
     this.nextTick = 2000;
@@ -250,6 +254,7 @@ export class Game {
     this.status = "finished";
     this.effect("victory", this.winner);
     this.votes.clear();
+    this.campaign?.finish(this);
     if (this.winner !== "draw") {
       this.stream[this.winner]++;
       if (!this.simulated) {
@@ -260,7 +265,7 @@ export class Game {
     this.say(
       this.winner === "draw"
         ? "Draw. Pick teams for the next battle."
-        : `${this.winner.toUpperCase()} WINS · Team picking is open`,
+        : `${this.winner.toUpperCase()} WIN · Team picking is open`,
     );
   }
   battlefield(kind) {
@@ -303,6 +308,7 @@ export class Game {
   }
   snapshot() {
     return {
+      campaign: this.campaign?.snapshot(),
       status: this.status,
       round: this.round,
       remaining: Math.ceil((180000 - this.elapsed) / 1000),
