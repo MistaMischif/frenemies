@@ -34,6 +34,12 @@
           ><button data-action="freeze">Freeze voting · 10s</button>
         </div>
       </div>
+      <section class="panel">
+        <div class="row"><h2>Live battlefield</h2><span class="mini">The same view your audience sees</span></div>
+        <div id="preview-stage" class="preview-stage"><iframe id="battle-preview" title="Live animated battle preview"></iframe></div>
+        <h3>Latest actions</h3>
+        <ol id="battle-events" class="battle-events"></ol>
+      </section>
       <div class="panel">
         <h2>Bring it to your stream.</h2>
         <label for="overlay"
@@ -45,11 +51,19 @@
           rel="noopener"
           >Open overlay ↗</a
         >
+        <button id="copy-overlay">Copy OBS link</button>
+        <p id="copy-status" class="mini" role="status"></p>
         <p class="mini">
           Keep the control page signed in on your own computer. The overlay link
           is read-only.
         </p>
       </div>
+      <section class="panel">
+        <h2>Get your chat playing.</h2>
+        <p id="chat-instructions">Pick a side: !red or !blue. Then vote with !attack, !defend, !heal or !surge. Your team's winning vote acts every 2 seconds. Playing is free!</p>
+        <button id="copy-instructions">Copy viewer instructions</button>
+        <p class="mini">Paste into Twitch chat or your stream description. Viewers need no download or separate game account.</p>
+      </section>
       <div class="panel">
         <h2>Connection status</h2>
         <div id="integration" class="status"></div>
