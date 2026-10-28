@@ -40,3 +40,5 @@ Deployed commit 8f95615 on Render Free. All 14 automated tests passed. Productio
 ## Animated overlay and Barrage — October 27, 2026
 
 21 automated tests pass, including the Extension HTTP boundary, forged/expired identities, wrong viewer/channel claims, duplicate transactions, durable balances, pending-shot recovery, cooldowns, shields, pause/freeze and battle-ending interruption. Local 1280×720 browser test showed animated attacks and Barrage, no console errors, and kill cleared the entire overlay. Screenshots animated-battle-simulated.jpg and animated-barrage-simulated.jpg are explicitly simulated. Twitch Extension registration/credentials, real Bits transaction and Twitch mobile testing remain pending; the paid feature is disabled by default.
+
+Hosted verification: Render deployed 135979d successfully. A public simulated battle on the hosted service delivered three server-reported Barrage effects, each 3 damage (effect IDs 7, 10, 13), confirming the PostgreSQL grant/reserve/settle path. This remains simulated gameplay, not a Bits transaction test. A follow-up CSS fix d2a5857 ensures hidden demo controls are actually hidden outside the demo.

@@ -6,7 +6,7 @@ Red and Blue are the only teams. The streamer hosts; viewers play through Twitch
 
 ## Current delivery status
 
-Deployed October 26, 2026: **https://frenemies-u3n4.onrender.com**. Public source: **https://github.com/MistaMischif/frenemies**. Render Free + Neon Free are configured. Fourteen automated tests pass. Twitch sign-in and real chat battles with two builder-controlled accounts have been verified, including attacks, surge, control effects and a Blue win saved to the season scoreboard. This is not evidence of an independent audience or live OBS broadcast. Genuine Twitch event effects and the final video remain pending. See `submission/LIVE-TEST.md` for observed evidence and remaining checks; simulated screenshots remain labelled.
+Deployed October 26, 2026: **https://frenemies-u3n4.onrender.com**. Public source: **https://github.com/MistaMischif/frenemies**. Render Free + Neon Free are configured. Twenty-one automated tests pass. Twitch sign-in and real chat battles with two builder-controlled accounts have been verified, including attacks, surge, control effects and a Blue win saved to the season scoreboard. This is not evidence of an independent audience or live OBS broadcast. Genuine Twitch event effects and the final video remain pending. See `submission/LIVE-TEST.md` for observed evidence and remaining checks; simulated screenshots remain labelled.
 
 ## Streamer setup — target under five minutes on a configured server
 
@@ -129,3 +129,4 @@ The OBS overlay now draws squads, forts, projectiles, impacts, shields, healing/
 Barrage is an optional Twitch Extension integration, **disabled pending Twitch setup, review and real transaction validation**. The prepared fixed product is `barrage_v1`, draft 100 Bits, three extra 3-damage shots spaced two seconds apart and a 30-second team cooldown. Shields halve a shot; surge does not multiply Barrage. This intentionally adds a separate paid-action path while retaining the one-free-vote rule. `!barrage` activates banked shots; the Extension also has a button. Unused shots persist by Twitch user ID/channel in `frenemies_barrage` and must be included in database backups. Viewer identity sharing is needed only for this optional feature. Free users need no Extension/account setup.
 
 See `submission/BARRAGE-SETUP.md` for the package, credentials, live gate, retention and rollout limitations. The simulated demo has a **Simulate Barrage · no Bits** button; it is unavailable in real channels. Simulated shots do not constitute real transaction evidence. Existing follow/subscription/channel-point effects remain separate.
+
