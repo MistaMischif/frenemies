@@ -1,3 +1,5 @@
+import { installWar } from "./war-routes.js";
+import { WAR_KEY } from "./war.js";
 import { SessionStore } from "./sessions.js";
 import { Show } from "./show.js";
 import { SaveQueue } from "./save-queue.js";
@@ -171,6 +173,10 @@ function makeRoom(id, login, simulated = false) {
       room.game.blockedCommands.has(text)
     )
       return;
+    if (war.active(room)) {
+      war.chat(room, userId, name, text);
+      return;
+    }
     room.campaign.identify(userId, name);
     if (room.territory.s.status === "active") {
       if (["!human", "!zombie"].includes(text)) {
@@ -295,7 +301,8 @@ function makeRoom(id, login, simulated = false) {
   rooms.set(id, room);
   return room;
 }
-for (const [id, r] of Object.entries(persisted)) makeRoom(id, r.login);
+for (const [id, r] of Object.entries(persisted))
+  if (id !== WAR_KEY) makeRoom(id, r.login);
 const app = express();
 app.set("trust proxy", 1);
 app.use(
@@ -487,6 +494,15 @@ const owner = (req, res, next) => {
       .json({ error: "Sign in with Twitch or start a simulated demo." });
   next();
 };
+const war = installWar({
+  app,
+  owner,
+  rooms,
+  persisted,
+  save,
+  root,
+  environmentList,
+});
 app.get("/api/control", owner, (req, res) =>
   res.json({
     csrf: req.session.csrf,
@@ -505,6 +521,13 @@ app.post("/api/control", owner, async (req, res) => {
     return res.sendStatus(403);
   const g = req.room.game;
   const action = req.body.action;
+  if (
+    war.active(req.room) &&
+    ["auto", "start", "next", "pause"].includes(action)
+  )
+    return res.status(409).json({
+      error: "Leave the shared war before starting a channel battle.",
+    });
   if (req.room.show.session) req.room.show.session.operatorActions++;
   if (action === "auto") {
     if (g.tabletop.enabled || g.territory.s.status === "active")
@@ -1142,7 +1165,7 @@ setInterval(() => {
       continue;
     }
     const g = room.game;
-    room.show.advance(g, room.startBattle, now);
+    if (!war.active(room)) room.show.advance(g, room.startBattle, now);
     if (room.integration.chat === "connected")
       room.economy.bucket(now).observedMs += Math.min(dt, 1000);
     if (
@@ -1187,6 +1210,7 @@ process.on("SIGTERM", async () => {
   for (const room of rooms.values()) room.stopChat?.();
   for (const ws of wss.clients) ws.close();
   server.close();
+  await war.flush().catch(() => {});
   await Promise.allSettled([...writes.values()]);
   sessionStore.close();
   await storage.close();

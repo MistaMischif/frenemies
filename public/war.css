@@ -1,0 +1,280 @@
+:root {
+  color-scheme: dark;
+  font-family:
+    Inter,
+    Segoe UI,
+    sans-serif;
+  background: #0b1115;
+  color: #e4eee9;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+header {
+  padding: 22px 4vw;
+  border-bottom: 1px solid #ffffff16;
+  display: flex;
+  gap: 25px;
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+a {
+  color: #d5e6a0;
+}
+header a {
+  font-weight: 900;
+  text-decoration: none;
+  color: #f4f8f0;
+}
+#mode {
+  color: #d5e6a0;
+}
+#connection {
+  margin-left: auto;
+}
+main {
+  max-width: 1440px;
+  margin: auto;
+  padding: 26px 4vw;
+}
+.mast {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: #c8d791;
+}
+h1 {
+  font-size: clamp(28px, 4vw, 52px);
+  margin: 12px 0;
+  letter-spacing: -2px;
+}
+p {
+  line-height: 1.6;
+  color: #a8b9b5;
+}
+.world {
+  display: flex;
+  gap: 24px;
+}
+.world span {
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+.world b {
+  display: block;
+  font-size: 32px;
+  margin-top: 10px;
+  letter-spacing: -1px;
+}
+.theatre {
+  position: relative;
+  margin-top: 20px;
+  border: 1px solid #71868155;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #142a32;
+}
+canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1440/560;
+}
+.scene-top,
+.scene-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  padding: 20px 26px;
+  background: linear-gradient(#071217df, transparent);
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+.scene-top {
+  top: 0;
+}
+.scene-bottom {
+  bottom: 0;
+  background: linear-gradient(transparent, #071217ef);
+  display: block;
+  padding-top: 35px;
+}
+#stakes {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.gauges {
+  display: flex;
+  gap: 30px;
+  margin-top: 16px;
+}
+.gauges label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+}
+meter {
+  height: 12px;
+  width: 110px;
+}
+.roles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 18px;
+}
+.roles div {
+  padding: 18px;
+  border: 1px solid #a0b3a32e;
+  border-radius: 10px;
+  background: #15201f;
+}
+.roles b {
+  display: block;
+  color: #d6e79f;
+  font-size: 20px;
+}
+.roles span {
+  font-size: 12px;
+  color: #b2c0ba;
+}
+.hint {
+  font-size: 12px;
+}
+.panel {
+  border: 1px solid #ffffff19;
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 20px;
+  background: #101a1d;
+}
+h2 {
+  font-size: 20px;
+  margin-top: 0;
+}
+h3 {
+  font-size: 15px;
+}
+.heading {
+  display: flex;
+  justify-content: space-between;
+}
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+button,
+input {
+  font: inherit;
+  padding: 12px;
+  border: 1px solid #748a6555;
+  border-radius: 6px;
+  color: #e5efdb;
+  background: #27352c;
+}
+button {
+  cursor: pointer;
+}
+button:hover {
+  background: #3a4c38;
+}
+button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.lower {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 20px;
+}
+ol {
+  padding-left: 20px;
+}
+li {
+  font-size: 13px;
+  color: #c2d0c7;
+  line-height: 1.6;
+  margin: 12px 0;
+}
+.community {
+  padding: 12px 0;
+  border-bottom: 1px solid #ffffff15;
+}
+.community b {
+  color: #d7e6a8;
+}
+.contribution {
+  font-size: 12px;
+  padding: 6px 0;
+  color: #a7bbb8;
+}
+#feedback {
+  color: #f3cf8d;
+  min-height: 24px;
+}
+body.overlay #commands,
+body.overlay #export,
+body.overlay header a {
+  display: none;
+}
+body.overlay main {
+  padding: 20px;
+}
+body.overlay .lower {
+  font-size: 12px;
+}
+[hidden] {
+  display: none !important;
+}
+@media (max-width: 760px) {
+  .mast {
+    display: block;
+  }
+  .world {
+    margin: 20px 0;
+  }
+  .roles {
+    grid-template-columns: 1fr 1fr;
+  }
+  .lower {
+    display: block;
+  }
+  .gauges {
+    gap: 8px;
+  }
+  meter {
+    width: 55px;
+  }
+  .scene-bottom {
+    padding: 12px;
+  }
+  #stakes {
+    font-size: 13px;
+  }
+  .scene-top {
+    padding: 12px;
+    font-size: 9px;
+  }
+  .heading {
+    display: block;
+  }
+}
+
+body.overlay.cleared {
+  background: transparent;
+}
+body.overlay.cleared > * {
+  visibility: hidden;
+}

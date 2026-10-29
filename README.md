@@ -1,3 +1,7 @@
+# Shared war update - 1.9.0
+
+Open `/war` from streamer controls. Communities on the same service now escort one convoy and share persistent reserves, crossing control and settlement consequences. See [shared-war rules and test instructions](docs/SHARED-WAR.md). Previous channel battles remain available; the shared war uses its own OBS URL and commands.
+
 # Frenemies
 
 Frenemies is a creator-owned Twitch entertainment platform: team battles, authored community episodes, earned cosmetics and persistent characters alongside the streamer’s main show. C2G is an optional example pack. Creators supply their own names, skins, starter characters, environments and stories.

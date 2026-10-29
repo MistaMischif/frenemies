@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Frenemies · The shared front</title>
+    <link rel="stylesheet" href="/war.css" />
+    <script src="/environment-scenes.js" defer></script>
+    <script src="/war-ui.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <a href="/control">FRENEMIES /</a><span id="mode">CONNECTING</span
+      ><span id="connection"></span>
+    </header>
+    <main>
+      <section class="mast">
+        <div>
+          <p class="eyebrow">ONE WORLD. EVERY COMMUNITY COUNTS.</p>
+          <h1 id="title">The shared front</h1>
+          <p id="brief">
+            Escort the convoy. Hold the crossing. Keep the settlement supplied.
+          </p>
+        </div>
+        <div class="world">
+          <span>SETTLEMENT <b id="integrity">—</b></span
+          ><span>RESERVES <b id="supplies">—</b></span
+          ><span>DELIVERIES <b id="deliveries">—</b></span>
+        </div>
+      </section>
+      <section class="theatre">
+        <canvas
+          id="scene"
+          width="1440"
+          height="560"
+          aria-label="Live convoy battlefield"
+        ></canvas>
+        <div class="scene-top">
+          <span id="operation">Awaiting dispatch</span
+          ><span id="route">SCOUT → COMMIT → DELIVER</span>
+        </div>
+        <div class="scene-bottom">
+          <div id="stakes">
+            The next delivery changes this world's supplies.
+          </div>
+          <div class="gauges">
+            <label>CONVOY <meter id="hull" min="0" max="100"></meter></label
+            ><label
+              >CROSSING <meter id="crossing" min="0" max="100"></meter></label
+            ><label
+              >THREAT <meter id="pressure" min="0" max="100"></meter
+            ></label>
+          </div>
+        </div>
+      </section>
+      <section class="roles">
+        <div><b>!escort</b><span>Move the convoy forward</span></div>
+        <div><b>!fortify</b><span>Hold the crossing · reduce damage</span></div>
+        <div><b>!scout</b><span>Reveal routes · reduce pressure</span></div>
+        <div><b>!assault</b><span>Suppress the incoming threat</span></div>
+      </section>
+      <p class="hint">
+        One action per account every 6 seconds across all channels. Orders
+        expire after 20 seconds. An unattended front holds its position.
+      </p>
+      <section id="commands" class="panel">
+        <div class="heading">
+          <h2>Commander’s call</h2>
+          <a href="/creator">Your art & identity ↗</a>
+        </div>
+        <p id="command-help"></p>
+        <div class="buttons">
+          <button data-action="join">Join shared war</button
+          ><button data-action="launch">Dispatch convoy</button
+          ><button data-action="direct">Direct route · faster, exposed</button
+          ><button data-action="detour">Detour · slower, safer</button
+          ><button data-action="reserves">Commit 15 reserves · repair 25</button
+          ><button data-action="evacuate">Evacuate · lose 5 integrity</button
+          ><button data-action="take-command">
+            Take command - after handoff</button
+          ><button data-action="hide">Hide my overlay</button
+          ><button data-action="show">Show my overlay</button
+          ><button data-action="leave">Leave front</button>
+        </div>
+        <p id="feedback" role="status"></p>
+        <p>OBS browser source: <a id="overlay"></a></p>
+        <div id="demo" hidden>
+          <h3>Simulated viewer actions</h3>
+          <button id="squad">Run simulated squad</button>
+          <label
+            >Test account <input id="name" value="tester_one" maxlength="25"
+          /></label>
+          <div class="buttons" id="demo-buttons"></div>
+          <p>
+            Open a second browser session and start another demo to command a
+            second community in this same simulated war. Simulated activity
+            never enters live results.
+          </p>
+        </div>
+      </section>
+      <section class="lower">
+        <div class="panel">
+          <h2>Communities on the front</h2>
+          <div id="communities"></div>
+          <h3>Recent contributions</h3>
+          <div id="actions"></div>
+        </div>
+        <div class="panel">
+          <h2>War chronicle</h2>
+          <ol id="chronicle"></ol>
+        </div>
+      </section>
+      <section class="panel">
+        <h2>Evidence, not hype</h2>
+        <p id="metrics"></p>
+        <p>
+          Historical ambition: exceed 1,165,140 participating accounts, the 2014
+          Twitch Plays Pokémon benchmark. This is not a certified record attempt
+          or a count of unique people.
+        </p>
+        <p id="limits"></p>
+        <a id="export" href="/api/war/evidence"
+          >Download observed results & event evidence</a
+        >
+      </section>
+    </main>
+  </body>
+</html>
