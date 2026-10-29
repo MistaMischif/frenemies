@@ -324,3 +324,11 @@ body.overlay .theatre {
 body.overlay .gauges {
   opacity: 0.8;
 }
+body.overlay header {
+  display: flex;
+  padding: 12px 24px;
+}
+body.overlay header #connection {
+  font-size: 10px;
+  letter-spacing: 0;
+}
