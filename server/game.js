@@ -46,6 +46,7 @@ export class Game {
   canBarrage(name) {
     const t = this.players.get(name);
     return (
+      !this.tabletop?.enabled &&
       this.status === "running" &&
       this.elapsed >= this.freezeUntil &&
       t &&
@@ -56,6 +57,7 @@ export class Game {
     );
   }
   barrageShot(name) {
+    if (this.tabletop?.enabled) return false;
     const t = this.players.get(name);
     if (
       this.status !== "running" ||
@@ -175,6 +177,7 @@ export class Game {
     return totals;
   }
   advance(ms) {
+    if (this.tabletop?.enabled) return;
     if (this.status !== "running") return;
     this.elapsed = Math.min(180000, this.elapsed + ms);
     if (this.elapsed >= this.nextTick) {
@@ -223,7 +226,7 @@ export class Game {
         s = this.teams[t],
         target = this.teams[other];
       damage[other] =
-        Math.min(25, (5 + counts[t]) * (s.power ? 2 : 1)) *
+        (this.tabletop?.enabled ? this.tabletop.damage(t, (5 + counts[t]) * (s.power ? 2 : 1)) : Math.min(25, (5 + counts[t]) * (s.power ? 2 : 1))) *
         (target.shield ? 0.5 : 1);
       s.power = false;
       target.shield = false;
@@ -254,6 +257,7 @@ export class Game {
     this.status = "finished";
     this.effect("victory", this.winner);
     this.votes.clear();
+    this.tabletop?.finish();
     this.campaign?.finish(this);
     if (this.winner !== "draw") {
       this.stream[this.winner]++;
@@ -299,15 +303,19 @@ export class Game {
     if (kind === "follow") s.line = Math.min(100, s.line + 2);
     else if (kind === "sub") s.power = true;
     else if (kind === "raid") s.line = Math.min(100, s.line + 5);
-    else if (kind === "hype") s.frenzyUntil = this.elapsed + 60000;
+    else if (kind === "hype") {
+      if (this.tabletop?.enabled) this.tabletop.frenzy[t] = true;
+      else s.frenzyUntil = this.elapsed + 60000;
+    }
     else return false;
     this.say(
-      `${kind.toUpperCase()} · ${name} reinforces ${t.toUpperCase()}${kind === "hype" ? " · FRENZY 60s" : ""}`,
+      `${kind.toUpperCase()} · ${name} reinforces ${t.toUpperCase()}${kind === "hype" ? (this.tabletop?.enabled ? " · FRENZY +3 next Attack" : " · FRENZY 60s") : ""}`,
     );
     return true;
   }
   snapshot() {
     return {
+      tabletop: this.tabletop?.snapshot(),
       environment: this.environment || { id: "default", name: "Neon battlefield", url: null },
       campaign: this.campaign?.snapshot(),
       status: this.status,
@@ -315,7 +323,7 @@ export class Game {
       remaining: Math.ceil((180000 - this.elapsed) / 1000),
       teams: this.teams,
       counts: this.counts(),
-      totals: this.elapsed < this.fogUntil ? null : this.totals(),
+      totals: this.tabletop?.enabled || this.elapsed < this.fogUntil ? null : this.totals(),
       last: this.last,
       events: this.events,
       stream: this.stream,

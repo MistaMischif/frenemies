@@ -9,7 +9,7 @@ function render(s) {
   el("round").textContent = `BATTLE ${s.round || "—"}`;
   el("status").textContent = s.status.toUpperCase();
   el("timer").textContent =
-    `${Math.floor(s.remaining / 60)}:${String(s.remaining % 60).padStart(2, "0")}`;
+    s.tabletop?.enabled ? `${Math.min(12,s.tabletop.turn+1)}/12` : `${Math.floor(s.remaining / 60)}:${String(s.remaining % 60).padStart(2, "0")}`;
   el("effect").textContent = s.freeze
     ? `VOTING FROZEN · ${s.freeze}s`
     : s.fog

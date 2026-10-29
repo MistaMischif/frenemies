@@ -145,3 +145,15 @@ Streamer controls now support assigning a built-in scene or uploaded artwork to 
 ## C2G battle scenes (1.3.0)
 
 Choose **C2G Woodland clearing** or **C2G Settlement outskirts** in Next battle environment, then assign and start the next battle. Original C2G trees, grass, rocks and a house are composed in depth around a clear combat lane. The control preview uses the same scene renderer. Existing forest/ruins selections now use these compositions. Custom uploads and Neon battlefield remain available. No new service or dependency is required.
+
+## Physical tabletop edition (1.4.0)
+
+Open `/tabletop` in your signed-in Twitch room to use the same game and campaign. Enable tabletop pace between battles; both factions must be seated. Each host reveal resolves one of 12 rounds with physical votes plus Twitch chat votes. Use stable names for physical characters; do not seat the same person in chat and at the table. The companion polls every two seconds; the existing overlay uses the same authoritative server state. Physical votes are supplied only through the authenticated host endpoint with CSRF protection. Hidden totals stay hidden until reveal.
+
+From the home page, **Start physical tabletop companion** creates a local persistent campaign on a loopback development server. Hosted demo rooms remain temporary. Resume a local campaign by starting that companion again and re-seating its existing names. Real Twitch campaigns use existing PostgreSQL/JSON persistence. In-progress battles are not restored after restarts. Exported journals are human-readable backups; there is no offline-result import or conflict reconciliation.
+
+The full paper game needs no software or purchases. Download `/tabletop-kit.pdf` (18 pages including four full-size landscape Letter board tiles) and `/tabletop-board.pdf` (A3 master). Print Actual size, auto-rotate, single-sided. Print the action sheet once per person. The kit includes rules, character/encounter/event/equipment cards, counters and a 100-chapter journal framework. It uses only supplied C2G illustrations. Prototype balance: 12 rounds; Surge cooldown 3 rounds; Frenzy +3 next Attack; earned Barrage +3 on next three Attacks; each bonus stays inside the normal 25 cap. Paid Barrage is disabled while tabletop pace is enabled, without consuming purchased shots.
+
+Each played tabletop battle awards one component to both factions (launcher, bipod, sensor cycling). Craft once per faction between battles for a persistent +2 Attack. Woodland, Mole, Shield and Mega Mech prototype encounters unlock at 0/1/2/4 tabletop completions. All-registered-characters-infected plus fewer than 3 supplies permits one emergency recovery between battles, costing 10 settlement integrity. The PDF defines all rules and marks new design decisions explicitly.
+
+Rebuild PDFs: install free Python `reportlab` and `pypdf`, then run `python tools/build_tabletop_kit.py`. Runtime gameplay needs no PDF libraries or paid APIs. Intermediate renders are ignored by Git. Assets and provenance are in `public/tabletop-assets/ASSETS.md` and `public/environments/c2g/ASSETS.md`.

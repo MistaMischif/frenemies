@@ -1,5 +1,6 @@
 import express from "express";
 import { environmentList, parseEnvironmentUpload } from "./environments.js";
+import { Tabletop } from "./tabletop.js";
 import { Campaign } from "./campaign.js";
 import session from "express-session";
 import helmet from "helmet";
@@ -113,6 +114,8 @@ function makeRoom(id, login, simulated = false) {
     save(id);
   });
   room.game.campaign = room.campaign;
+  room.game.tabletop = new Tabletop(room.game, room.campaign);
+  for(const [key,c] of Object.entries(room.campaign.data.characters)) if(key.startsWith("table:")) room.campaign.identify(key,c.name);
   room.chat = (userId, name, text) => {
     name = name.toLowerCase(); text = text.trim().toLowerCase();
     if (name === room.game.host || room.game.blockedNames.has(name) || room.game.blockedCommands.has(text)) return;
@@ -238,7 +241,7 @@ app.use(
     },
   }),
 );
-app.get("/health", (_, res) => res.json({ ok: true }));
+app.get("/health", (_, res) => res.json({ ok: true, version: JSON.parse(readFileSync(path.join(root,"package.json"),"utf8")).version }));
 app.get("/auth/twitch", (req, res) => {
   if (
     !process.env.TWITCH_CLIENT_ID ||
@@ -337,8 +340,12 @@ app.post("/api/control", owner, (req, res) => {
   if ((action === "start" || action === "next") && req.room.environmentSaving) return res.status(409).json({error:"Wait for the environment to finish saving."});
   if (action === "start" || action === "next") {
     if (!["running", "paused"].includes(g.status)) {
+      if(g.tabletop.enabled && !["red","blue"].every(team=>[...g.players].some(([name,t])=>{
+        const c=req.room.campaign.data.characters[req.room.campaign.names.get(name)];return (c?.infected?"blue":t)===team;
+      }))) return res.status(400).json({error:"Seat at least one eligible Human and one Zombie before starting."});
       g.environment = environmentList(req.room).find(e => e.id === req.room.nextEnvironment) || environmentList(req.room)[0];
       g.start();
+      if(g.tabletop.enabled) g.tabletop.start();
     }
   }
   else if (action === "pause") g.pause();
@@ -397,6 +404,52 @@ app.get("/environment/:key/:id", (req, res) => {
   if (!asset) return res.sendStatus(404);
   res.set("Cache-Control", "private, max-age=86400").type("image/jpeg").send(Buffer.from(asset.image.split(",")[1], "base64"));
 });
+app.post("/tabletop/new", (req,res) => {
+  if(!req.session.csrf || req.body.csrf!==req.session.csrf) return res.sendStatus(403);
+  if(rooms.size>1000)return res.sendStatus(503);
+  const local=!production && ["127.0.0.1","::1","::ffff:127.0.0.1"].includes(req.socket.remoteAddress);
+  const id=local ? "local-tabletop" : "demo-"+randomBytes(12).toString("hex");
+  const room=rooms.get(id)||makeRoom(id,"table-host",!local);
+  if(!local)room.expires=Date.now()+12*3600000;
+  if(!["running","paused"].includes(room.game.status))room.game.tabletop.configure(true);
+  room.nextEnvironment="forest";
+  req.session.owner=id;req.session.csrf=randomBytes(24).toString("hex");
+  res.redirect(303,"/tabletop");
+});
+app.get("/api/tabletop", owner, (req,res)=>res.json({csrf:req.session.csrf,state:req.room.game.snapshot(),overlay:`${base}/overlay/${req.room.overlay}`,persistent:!req.room.game.simulated,characters:Object.entries(req.room.campaign.data.characters).map(([id,c])=>({...c,local:id.startsWith("table:"),joined:req.room.game.players.has(c.name)}))}));
+app.post("/api/tabletop", owner, (req,res)=>{
+  if(!req.session.csrf||req.get("x-csrf-token")!==req.session.csrf)return res.sendStatus(403);
+  const room=req.room,g=room.game,table=g.tabletop,b=req.body;
+  try{
+    if(b.action==="configure")table.configure(b.enabled===true,b.scenario);
+    else if(b.action==="join"){
+      if(["running","paused"].includes(g.status))throw Error("Seat physical players between battles.");
+      if(!/^[a-z0-9_]{1,18}$/.test(b.name)||!["red","blue"].includes(b.team))throw Error("Use a name with 1-18 lowercase letters, numbers or underscores.");
+      const name="table_"+b.name;
+      if(b.team==="red"&&room.campaign.data.characters["table:"+name]?.infected)throw Error("This character is infected. Join Zombies or recover at the clinic.");
+      if(Object.keys(room.campaign.data.characters).filter(id=>id.startsWith("table:")).length>=12&&!room.campaign.data.characters["table:"+name])throw Error("Maximum 12 physical characters.");
+      room.chat("table:"+name,name,b.team==="red"?"!human":"!zombie");
+    }
+    else if(b.action==="reveal"){
+      if(!table.enabled||g.status!=="running"||b.turn!==table.turn)throw Error("Round changed or is not running. Refresh first.");
+      if(!Array.isArray(b.votes)||b.votes.length>12||b.votes.some(v=>!room.campaign.data.characters["table:"+v.name]||!g.players.has(v.name)||!["attack","defend","heal","surge"].includes(v.action)))throw Error("Invalid physical vote.");
+      if(new Set(b.votes.map(v=>v.name)).size!==b.votes.length)throw Error("One card per physical player.");
+      if(b.boss && (table.scenario!=="mech"||!["missile","brace"].includes(b.boss)||(b.boss==="missile"?table.missiles:table.braces)<1))throw Error("Boss ability unavailable.");
+      for(const v of b.votes)g.chat(v.name,"!"+v.action);
+      table.boss=b.boss||"";table.reveal(b.turn);
+    }
+    else if(b.action==="event")table.event();
+    else if(b.action==="craft")table.craft(b.team);
+    else if(b.action==="rescue"){
+      if(!room.campaign.rescue(b.name,g))throw Error("Recovery needs an infected character, 3 supplies, and a battle break.");
+      g.chat(b.name,"!human");const c=room.campaign.data.characters[room.campaign.names.get(b.name)];if(c)c.faction="red";room.campaign.changed();
+    }
+    else if(b.action==="emergency")table.emergency(b.name);
+    else throw Error("Unknown tabletop action.");
+    broadcast(room);res.json(g.snapshot());
+  }catch(error){res.status(400).json({error:error.message});}
+});
+app.get("/tabletop", (_,res)=>res.sendFile(path.join(root,"public/tabletop.html")));
 app.get("/control", (_, res) =>
   res.sendFile(path.join(root, "public/control.html")),
 );
@@ -411,7 +464,7 @@ app.get("/", (req, res) => {
     .set("Cache-Control", "no-store")
     .type("html")
     .send(
-      readFileSync(path.join(root, "public/index.html"), "utf8").replace(
+      readFileSync(path.join(root, "public/index.html"), "utf8").replaceAll(
         "<!--CSRF-->",
         `<input type="hidden" name="csrf" value="${req.session.csrf}">`,
       ),
@@ -462,7 +515,7 @@ setInterval(() => {
     }
     const g = room.game;
     if (
-      g.simulated &&
+      g.simulated && !g.tabletop.enabled &&
       g.status === "running" &&
       Math.floor(g.elapsed / 2000) !== room.simTick
     ) {
