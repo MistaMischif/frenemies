@@ -41,6 +41,16 @@ export function installWar({
     channel: r.id,
     channelName: r.login,
     creator: r.game.snapshot().creator,
+    encounterArt: Object.fromEntries(
+      ["red", "blue"].map((team) => [
+        team,
+        r.economy
+          .catalog(r.overlay)
+          .items.filter((i) => i.team === team)
+          .slice(0, 4)
+          .map((i) => i.asset),
+      ]),
+    ),
     roster: Object.values(r.economy.roster(r.game, r.overlay)).flat(),
     environment: environmentList(r).find((e) => e.id === r.nextEnvironment),
     enlisted: active(r),
@@ -86,6 +96,15 @@ export function installWar({
         r.show.auto = false;
         if (r.game.status === "running") r.game.status = "paused";
         if (w.s.operation?.status !== "active") w.command(r.id, "launch");
+        if (
+          req.body.previewBridge === true &&
+          w.s.operation.commander === r.id &&
+          !w.s.operation.bridge
+        ) {
+          w.s.operation.intel = Math.max(3, w.s.operation.intel);
+          if (!w.s.operation.route) w.command(r.id, "detour");
+          w.s.operation.progress = 30;
+        }
         r.simWarSquad = true;
         r.simWarAutoRoute = true;
       } else if (req.body.action === "demo-squad" && w.simulated) {
@@ -139,9 +158,13 @@ export function installWar({
         );
       }
     const commander = rooms.get(demo.s.operation?.commander);
-    if (commander?.simWarAutoRoute && commander.simWarSquad &&
-        demo.s.operation?.status === "active" && !demo.s.operation.route &&
-        demo.s.operation.intel >= 3) {
+    if (
+      commander?.simWarAutoRoute &&
+      commander.simWarSquad &&
+      demo.s.operation?.status === "active" &&
+      !demo.s.operation.route &&
+      demo.s.operation.intel >= 3
+    ) {
       demo.command(commander.id, "detour");
     }
     for (const w of [live, demo]) {

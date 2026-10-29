@@ -1,3 +1,5 @@
+import { BridgeScene } from "/bridge-scene.js";
+const bridgeScene = new BridgeScene();
 import { BattleReactions } from "/war-reactions.js";
 const reactions = new BattleReactions();
 const $ = (id) => document.getElementById(id),
@@ -7,7 +9,7 @@ if (key) $("commands").hidden = true;
 let state,
   csrf,
   busy = false,
-  position = 0;
+  position = null;
 const images = new Map(),
   image = (url) => {
     if (!images.has(url)) {
@@ -33,7 +35,12 @@ async function load() {
       key ? "/api/war/view/" + encodeURIComponent(key) : "/api/war",
       { cache: "no-store" },
     );
-    if (!r.ok) { $("sign-in").hidden = !!key; throw Error("Start a demo or connect Twitch using the link above the battlefield."); }
+    if (!r.ok) {
+      $("sign-in").hidden = !!key;
+      throw Error(
+        "Start a demo or connect Twitch using the link above the battlefield.",
+      );
+    }
     state = await r.json();
     $("sign-in").hidden = true;
     reactions.accept(state, performance.now());
@@ -58,6 +65,15 @@ function render() {
           ? "The convoy is lost. This crossing will remember the stand."
           : "";
   $("host-choice").hidden = !director?.choice;
+  const bridge = o?.bridge;
+  $("bridge-choice").hidden =
+    !bridge || bridge.phase !== "defend" || !!bridge.decision;
+  $("bridge-status").textContent =
+    bridge?.phase === "defend"
+      ? "Raiders threaten the crossing. Your convoy is waiting behind the defenders."
+      : s.bridgeLegacy
+        ? `Last crossing: ${s.bridgeLegacy.condition} by ${s.bridgeLegacy.community}. Its condition carries into this convoy.`
+        : "";
   document.body.dataset.pacing = director?.phase || "build";
   $("mode").textContent = s.simulated
     ? "SIMULATED WAR · NO LIVE RESULTS"
@@ -90,7 +106,10 @@ function render() {
   $("demo").hidden = !s.simulated;
   $("demo-launch").hidden = !s.simulated || !!key;
   $("start-demo").disabled = busy || (s.demoSquad && o?.status === "active");
-  $("start-demo").textContent = s.demoSquad && o?.status === "active" ? "Demo running · all four roles active" : "Start moving battlefield demo";
+  $("start-demo").textContent =
+    s.demoSquad && o?.status === "active"
+      ? "Demo running · all four roles active"
+      : "Start moving battlefield demo";
   $("squad").textContent = s.demoSquad
     ? "Stop simulated squad"
     : "Run simulated squad";
@@ -99,6 +118,11 @@ function render() {
     const a = b.dataset.action;
     b.disabled =
       busy ||
+      (a.startsWith("bridge-") &&
+        (o?.commander !== s.channel ||
+          bridge?.phase !== "defend" ||
+          !!bridge?.decision ||
+          (a === "bridge-repair" && s.supplies < 10))) ||
       (["director-on", "director-off", "rescue", "press-on"].includes(a) &&
         (o?.status !== "active" || o.commander !== s.channel)) ||
       (["rescue", "press-on"].includes(a) && !o?.director?.choice) ||
@@ -196,6 +220,18 @@ function draw(t) {
       h,
       s?.environment?.id === "ruins" ? "ruins" : "forest",
     );
+  const atBridge = o?.bridge?.phase === "defend";
+  if (atBridge) bridgeScene.exitAt = null;
+  else if (bridgeScene.wasActive) bridgeScene.exitAt = t;
+  bridgeScene.wasActive = atBridge;
+  if (
+    atBridge ||
+    (o?.bridge && bridgeScene.exitAt && t - bridgeScene.exitAt < 3500)
+  ) {
+    bridgeScene.draw(ctx, s, t, image, reduced.matches);
+    requestAnimationFrame(draw);
+    return;
+  }
   // One readable side-on lane; route and progress share the same world coordinates.
   ctx.fillStyle = "#172b2f";
   ctx.beginPath();
@@ -222,7 +258,10 @@ function draw(t) {
   ctx.lineTo(1020, 390);
   ctx.stroke();
   const target = 150 + (o?.progress || 0) * 10;
-  position = reduced.matches ? target : position + (target - position) * 0.035;
+  position =
+    reduced.matches || position === null
+      ? target
+      : position + (target - position) * 0.035;
   const x = position || 150,
     y = 400;
   ctx.fillStyle = "#13202077";
@@ -304,13 +343,27 @@ function draw(t) {
       ctx.fill();
     }
   }
+  if (s?.bridgeLegacy) {
+    ctx.fillStyle =
+      s.bridgeLegacy.condition === "secured" ? "#d6e79f" : "#e8a58b";
+    ctx.font = "bold 15px Segoe UI";
+    ctx.fillText(
+      s.bridgeLegacy.condition === "secured"
+        ? "COMMUNITY-REBUILT CROSSING"
+        : "DAMAGED CROSSING",
+      865,
+      300,
+    );
+  }
   reactions.draw(ctx, s, t, x, reduced.matches);
   requestAnimationFrame(draw);
 }
 load().then(() => {
-  if (state?.simulated && new URLSearchParams(location.search).has("demo")) send("demo-start");
+  if (state?.simulated && new URLSearchParams(location.search).has("demo"))
+    send("demo-start");
 });
 $("start-demo").onclick = () => send("demo-start");
+$("preview-bridge").onclick = () => send("demo-start", { previewBridge: true });
 setInterval(load, 2000);
 requestAnimationFrame(draw);
 

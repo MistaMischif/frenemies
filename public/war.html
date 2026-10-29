@@ -30,7 +30,14 @@
       </section>
       <section id="demo-launch" class="panel" hidden>
         <button id="start-demo">Start moving battlefield demo</button>
-        <p>Automatically joins, dispatches, adds all four viewer roles and chooses a route after scouting. You can still make commander decisions. Simulated results only.</p>
+        <button id="preview-bridge">
+          Preview bridge encounter · simulated
+        </button>
+        <p>
+          Automatically joins, dispatches, adds all four viewer roles and
+          chooses a route after scouting. You can still make commander
+          decisions. Simulated results only.
+        </p>
       </section>
       <p id="sign-in" hidden><a href="/">Start a demo or connect Twitch</a></p>
       <section class="theatre">
@@ -75,6 +82,25 @@
           <a href="/creator">Your art & identity ↗</a>
         </div>
         <p id="command-help"></p>
+        <p id="bridge-status"></p>
+        <div id="bridge-choice" hidden class="panel">
+          <h3>The crossing is under attack</h3>
+          <p>
+            Hold with your viewers for free. Emergency repairs spend 10 reserves
+            for up to 24 extra barricade health over two active ticks. Rush
+            saves time (+18 progress), costs 8 convoy hull and leaves the shared
+            crossing 25 points weaker. No answer: hold after 24 active seconds.
+          </p>
+          <button data-action="bridge-hold">
+            Hold the crossing · trust the community
+          </button>
+          <button data-action="bridge-repair">
+            Emergency repair · 10 reserves
+          </button>
+          <button data-action="bridge-rush">
+            Rush through · sacrifice the crossing
+          </button>
+        </div>
         <div id="host-choice" hidden>
           <p>
             The host has spotted stranded crew. Rescue costs 10 reserves and a

@@ -1,3 +1,4 @@
+import { bridgeStep, bridgeCommand } from "./bridge.js";
 import { createDirector, direct } from "./director.js";
 import { createHash } from "node:crypto";
 export const WAR_KEY = "__shared_war_v1";
@@ -92,7 +93,9 @@ export class War {
       return;
     }
     if (!o || o.status !== "active") throw Error("Dispatch a convoy first.");
-    if (
+    if (action.startsWith("bridge-")) {
+      bridgeCommand(this, channel, action);
+    } else if (
       ["director-on", "director-off", "rescue", "press-on"].includes(action)
     ) {
       if (o.commander !== channel)
@@ -250,81 +253,90 @@ export class War {
     };
     // Scouting earns a decision without suffering a hidden pre-route attack.
     if (o.route) {
-      const d = o.director,
-        pacing = direct(d, o);
-      if (pacing.changed)
-        this.event("host", d.cue, {
-          operation: o.id,
-          phase: d.phase,
-          intensity: d.intensity,
-        });
-      if (
-        d.enabled &&
-        !d.offered &&
-        o.progress >= 25 &&
-        o.progress < 80 &&
-        o.hull >= 35 &&
-        d.phase === "relax"
-      ) {
-        d.offered = true;
-        d.choice = { remaining: 5 };
-        d.cue =
-          "Stranded crew spotted. Rescue: spend 10 reserves and stop for 12 active seconds to restore 5 settlement integrity. Or keep moving. Default: continue.";
-        d.cueId++;
-        this.event("host", d.cue, {
-          operation: o.id,
-          choice: "rescue",
-          cost: 10,
-          holdTicks: 2,
-          benefit: 5,
-        });
-      } else if (d.choice && --d.choice.remaining <= 0) {
-        d.choice = null;
-        d.cue = "No diversion ordered. The convoy stays on its route.";
-        d.cueId++;
-        this.event("host", d.cue, { operation: o.id, default: "press-on" });
-      }
-      const held = d.rescueTicks > 0;
-      if (held && --d.rescueTicks === 0) {
-        d.rescued = true;
-        this.s.integrity = Math.min(100, this.s.integrity + 5);
-        d.cue =
-          "Crew aboard. Settlement integrity restored by 5. The convoy resumes.";
-        d.cueId++;
-        this.event("rescue", d.cue, {
-          operation: o.id,
-          integrity: this.s.integrity,
-        });
-      }
-      const exposed = o.route === "direct";
-      o.pressure = Math.max(
-        0,
-        Math.min(
+      const bridgeHeld = bridgeStep(this, n, intents);
+      if (!bridgeHeld) {
+        const d = o.director,
+          pacing = direct(d, o);
+        if (pacing.changed)
+          this.event("host", d.cue, {
+            operation: o.id,
+            phase: d.phase,
+            intensity: d.intensity,
+          });
+        if (
+          d.enabled &&
+          o.bridge?.phase !== "defend" &&
+          !d.offered &&
+          o.progress >= 25 &&
+          o.progress < 80 &&
+          o.hull >= 35 &&
+          d.phase === "relax"
+        ) {
+          d.offered = true;
+          d.choice = { remaining: 5 };
+          d.cue =
+            "Stranded crew spotted. Rescue: spend 10 reserves and stop for 12 active seconds to restore 5 settlement integrity. Or keep moving. Default: continue.";
+          d.cueId++;
+          this.event("host", d.cue, {
+            operation: o.id,
+            choice: "rescue",
+            cost: 10,
+            holdTicks: 2,
+            benefit: 5,
+          });
+        } else if (d.choice && --d.choice.remaining <= 0) {
+          d.choice = null;
+          d.cue = "No diversion ordered. The convoy stays on its route.";
+          d.cueId++;
+          this.event("host", d.cue, { operation: o.id, default: "press-on" });
+        }
+        const held = d.rescueTicks > 0;
+        if (held && --d.rescueTicks === 0) {
+          d.rescued = true;
+          this.s.integrity = Math.min(100, this.s.integrity + 5);
+          d.cue =
+            "Crew aboard. Settlement integrity restored by 5. The convoy resumes.";
+          d.cueId++;
+          this.event("rescue", d.cue, {
+            operation: o.id,
+            integrity: this.s.integrity,
+          });
+        }
+        const exposed = o.route === "direct";
+        o.pressure = Math.max(
+          0,
+          Math.min(
+            100,
+            o.pressure + pacing.spawn - n.assault * 0.9 - n.scout * 0.3,
+          ),
+        );
+        this.s.crossing = Math.max(
+          0,
+          Math.min(100, this.s.crossing + n.fortify * 0.8 - 3),
+        );
+        const damage = Math.max(
+          0,
+          (pacing.engaged ? (exposed ? 6 : 3) : 0) +
+            o.pressure / 15 -
+            n.fortify * 0.6,
+        );
+        o.hull = Math.max(0, o.hull - damage);
+        d.damage = damage;
+        o.progress = Math.min(
           100,
-          o.pressure + pacing.spawn - n.assault * 0.9 - n.scout * 0.3,
-        ),
-      );
-      this.s.crossing = Math.max(
-        0,
-        Math.min(100, this.s.crossing + n.fortify * 0.8 - 3),
-      );
-      const damage = Math.max(
-        0,
-        (pacing.engaged ? (exposed ? 6 : 3) : 0) +
-          o.pressure / 15 -
-          n.fortify * 0.6,
-      );
-      o.hull = Math.max(0, o.hull - damage);
-      d.damage = damage;
-      o.progress = Math.min(
-        100,
-        o.progress +
-          (held
-            ? 0
-            : n.escort * (exposed ? 1.5 : 1) + (this.s.crossing >= 60 ? 3 : 0)),
-      );
+          o.progress +
+            (held
+              ? 0
+              : n.escort * (exposed ? 1.5 : 1) +
+                (this.s.crossing >= 60 ? 3 : 0)),
+        );
+      }
     }
-    if (before.crossing < 60 && this.s.crossing >= 60) {
+    if (
+      o.bridge?.phase !== "defend" &&
+      before.crossing < 60 &&
+      this.s.crossing >= 60
+    ) {
       const names = [
         ...new Set(
           intents
@@ -420,6 +432,16 @@ export class War {
     const { players, events, ...world } = this.s;
     return {
       ...world,
+      operation: world.operation
+        ? {
+            ...world.operation,
+            bridge: world.operation.bridge
+              ? (({ seen, ...publicBridge }) => publicBridge)(
+                  world.operation.bridge,
+                )
+              : undefined,
+          }
+        : null,
       visualRoles: Object.fromEntries(
         roles.map((role) => [
           role,
