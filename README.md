@@ -4,9 +4,11 @@ Frenemies turns Twitch chat into Human and Zombie factions in an animated C2G ou
 
 ## Current delivery status
 
+Version 1.7.0 adds creator-managed skins and missions, earned currency, persistent inventory, named equipped characters and aggregate D1/D7 participation tracking. Open **Creator studio** from controls. See [creator economy documentation](docs/CREATOR-ECONOMY.md) for rules and limits. Real-money payouts remain separate and unimplemented.
+
 Version 1.6.0 restores the Twitch-first entry point, adds !join, a compact OBS layout, and accurate battle recaps. Board-game prototypes are removed from the main navigation; saved prototype data is retained. Existing active prototypes have an explicit Return to Twitch battles control that does not award a win.
 
-Established hosting: https://frenemies-u3n4.onrender.com. Source: https://github.com/MistaMischif/frenemies. Current release verification is in releases/1.6.0/README.md. Bits availability still depends on Extension onboarding and channel eligibility; do not treat the simulated Barrage as a live transaction. No large-streamer adoption or audience-retention uplift has been established.
+Established hosting: https://frenemies-u3n4.onrender.com. Source: https://github.com/MistaMischif/frenemies. Current release verification is in releases/1.7.0/README.md. Bits availability still depends on Extension onboarding and channel eligibility; do not treat the simulated Barrage as a live transaction. No large-streamer adoption or audience-retention uplift has been established.
 
 See docs/TWITCH-PRODUCT-DIRECTION.md for the research, prioritized changes and pilot criteria. Planned features are distinguished from implemented ones.
 

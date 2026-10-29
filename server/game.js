@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 export const TEAMS = ["red", "blue"];
 export const COMMANDS = ["attack", "defend", "heal", "surge"];
 const team = () => ({
@@ -39,6 +40,7 @@ export class Game {
     this.effects = [];
     this.barrageReady = { red: 0, blue: 0 };
     this.participation = new Map();
+    this.actionCounts = new Map();
     this.recap = null;
   }
   effect(kind, team, extra = {}) {
@@ -46,6 +48,7 @@ export class Game {
     this.effects = this.effects.slice(-32);
   }
   canBarrage(name) {
+    if(this.economyBusy)return false;
     const t = this.players.get(name);
     return (
       !this.tabletop?.enabled && this.territory?.s.status!=="active" &&
@@ -59,6 +62,7 @@ export class Game {
     );
   }
   barrageShot(name) {
+    if(this.economyBusy)return false;
     if (this.tabletop?.enabled || this.territory?.s.status==="active") return false;
     const t = this.players.get(name);
     if (
@@ -82,6 +86,7 @@ export class Game {
   }
   say(text) {
     text = text.replace(/\bred\b/gi, "HUMANS").replace(/\bblue\b/gi, "ZOMBIES").replace(/(HUMANS|ZOMBIES) (attacks|defends|heals|surges)/g, (_, team, verb) => `${team} ${verb.slice(0, -1)}`);
+    if(this.economy?.d.factions)text=text.replace(/\bHUMANS\b/g,this.economy.d.factions.red).replace(/\bZOMBIES\b/g,this.economy.d.factions.blue);
     this.last = text;
     this.events.unshift(text);
     this.events = this.events.slice(0, 5);
@@ -93,6 +98,8 @@ export class Game {
       if (character?.infected) { this.players.set(name, "blue"); character.faction = "blue"; }
     }
     this.round++;
+    this.battleId = randomUUID();
+    this.actionCounts.clear();
     this.elapsed = 0;
     this.nextTick = 2000;
     this.teams = { red: team(), blue: team() };
@@ -179,6 +186,7 @@ export class Game {
     this.active.add(name);
     this.votes.set(name, cmd);
     this.participation.set(name, (this.participation.get(name) || 0) + 1);
+    const actions=this.actionCounts.get(name)||{};actions[cmd]=(actions[cmd]||0)+1;this.actionCounts.set(name,actions);
     return true;
   }
   totals() {
@@ -338,6 +346,8 @@ export class Game {
   }
   snapshot() {
     return {
+      creator: this.economy ? {title:this.economy.d.title,currency:this.economy.d.currency,factions:this.economy.d.factions} : null,
+      roster: this.economy?.roster(this,this.overlayKey),
       recap: this.recap,
       territory: this.territory?.snapshot(),
       tabletop: this.tabletop?.snapshot(),

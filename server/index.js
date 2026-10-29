@@ -1,3 +1,4 @@
+import { Economy } from "./economy.js";
 import express from "express";
 import { environmentList, parseEnvironmentUpload } from "./environments.js";
 import { TerritoryGame } from "./territory.js";
@@ -116,6 +117,10 @@ function makeRoom(id, login, simulated = false) {
     save(id);
   });
   room.game.campaign = room.campaign;
+  room.economy = new Economy(room.campaign);
+  room.game.economy = room.economy;
+  room.game.overlayKey = room.overlay;
+  room.shopCooldown = new Map();
   room.game.tabletop = new Tabletop(room.game, room.campaign);
   room.territory = new TerritoryGame(room.campaign);
   room.game.territory = room.territory;
@@ -130,6 +135,21 @@ function makeRoom(id, login, simulated = false) {
       if(["!human","!zombie"].includes(text)) {if(room.game.players.has(name))return;}
       else {room.territory.vote(userId,name,room.game.players.get(name),text);return;}
     }
+    if (/^!(wallet|inventory|shop|redeem|equip|missions)(\s|$)/.test(text)) {
+      if (!room.campaign.data.characters[userId]) {room.game.say(`${name}: type !join first.`);return;}
+      const now=Date.now();if(now-(room.shopCooldown.get(userId)||0)<2000)return;room.shopCooldown.set(userId,now);
+      room.enqueue(async()=>{
+        room.economySaving=true;room.game.economyBusy=true;
+        const before=structuredClone(room.economy.d);
+        try {
+          const message=room.economy.command(userId,name,text,room.game.players.get(name));
+          if(!simulated){persisted[id].campaign=room.campaign.data;await save(id);}
+          room.game.say(message);
+        } catch(error){room.campaign.data.economy=before;room.game.say(`${name}: ${error.message}`);}
+        finally{room.economySaving=false;room.game.economyBusy=false;broadcast(room);}
+      }).catch(()=>{});return;
+    }
+    if (room.economySaving) return;
     if (text === "!status") { const status = room.campaign.status(name); if (status) room.game.say(status); return; }
     if (text === "!rescue") { if (room.campaign.rescue(name, room.game)) room.game.say(`${name} recovered at the clinic`); return; }
     const character = room.campaign.data.characters[userId];
@@ -143,7 +163,9 @@ function makeRoom(id, login, simulated = false) {
   room.enqueue = fn => {const run=eventQueue.catch(()=>{}).then(fn);eventQueue=run;return run;};
   room.campaignEvent = (type, event, receipt) => {
     const run = eventQueue.catch(() => {}).then(async () => {
+      const already=room.campaign.data.receipts[receipt];
       const changed = room.campaign.event(type, event, receipt);
+      if(changed&&!already){const counts=room.economy.bucket(Date.now()).events;counts[type]=(counts[type]||0)+1;}
       const territoryChanged = room.territory.event(type,event,receipt,room.game.players);
       if (!changed && !territoryChanged && !room.campaign.data.receipts[receipt]) return;
       if (!simulated) {
@@ -228,6 +250,7 @@ app.post("/eventsub", async (req, res) => {
   seen.set(id, Date.now());
   res.sendStatus(204);
 });
+app.use("/api/creator", express.json({ limit: "400kb" }));
 app.use("/api/environments", express.json({ limit: "750kb" }));
 app.use(express.json({ limit: "8kb" }));
 app.use(express.urlencoded({ extended: false, limit: "8kb" }));
@@ -403,6 +426,27 @@ app.post("/api/control", owner, async (req, res) => {
   } else return res.sendStatus(400);
   broadcast(req.room);
   res.json(g.snapshot());
+});
+const publicRoom = key => [...rooms.values()].find(r=>r.overlay===key);
+app.get('/api/creator',owner,(req,res)=>res.json({csrf:req.session.csrf,...req.room.economy.catalog(req.room.overlay,true),analytics:req.room.economy.analytics(),shop:`${base}/shop/${req.room.overlay}`,simulated:req.room.game.simulated}));
+app.post('/api/creator',owner,async(req,res)=>{
+ if(!req.session.csrf||req.get('x-csrf-token')!==req.session.csrf)return res.sendStatus(403);
+ try{await req.room.enqueue(async()=>{
+  const room=req.room;room.economySaving=true;room.game.economyBusy=true;const before=structuredClone(room.economy.d);
+  try{room.economy.author(req.body);if(!room.game.simulated){persisted[room.id].campaign=room.campaign.data;await save(room.id);}}
+  catch(e){room.campaign.data.economy=before;throw e;}finally{room.economySaving=false;room.game.economyBusy=false;}
+ });res.json({ok:true});}catch(e){res.status(400).json({error:e.message});}
+});
+app.get('/api/shop/:key',(req,res)=>{const r=publicRoom(req.params.key);if(!r)return res.sendStatus(404);res.json({...r.economy.catalog(r.overlay),simulated:r.game.simulated});});
+app.get('/item-art/:key/:id',(req,res)=>{const r=publicRoom(req.params.key),item=r?.economy.d.items.find(i=>i.id===req.params.id);if(!item?.image||(!item.published&&!item.everPublished&&req.session.owner!==r.id))return res.sendStatus(404);res.type('png').set('Cache-Control',item.published||item.everPublished?'public, max-age=3600':'private, no-store').send(Buffer.from(item.image.split(',')[1],'base64'));});
+app.get('/creator',(_,res)=>res.sendFile(path.join(root,'public/creator.html')));
+app.get('/shop/:key',(_,res)=>res.sendFile(path.join(root,'public/shop.html')));
+app.post('/api/demo-chat',owner,(req,res)=>{
+ if(!req.session.csrf||req.get('x-csrf-token')!==req.session.csrf)return res.sendStatus(403);
+ if(!req.room.game.simulated)return res.sendStatus(403);
+ const name=String(req.body.name||'').toLowerCase(),message=String(req.body.message||'');
+ if(!/^[a-z0-9_]{1,25}$/.test(name)||message.length>120)return res.sendStatus(400);
+ req.room.chat('demo-user-'+name,name,message);broadcast(req.room);res.json({ok:true});
 });
 app.post("/api/environments", owner, async (req, res) => {
   if (!req.session.csrf || req.get("x-csrf-token") !== req.session.csrf) return res.sendStatus(403);
@@ -589,6 +633,8 @@ setInterval(() => {
       continue;
     }
     const g = room.game;
+    if (room.economySaving) continue;
+    if (room.integration.chat === "connected") room.economy.bucket(now).observedMs += Math.min(dt,1000);
     if (
       g.simulated && !g.tabletop.enabled && g.territory.s.status!=="active" &&
       g.status === "running" &&

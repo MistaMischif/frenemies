@@ -41,6 +41,7 @@ export class Campaign {
     this.changed(); return true;
   }
   finish(game) {
+    game.economy?.finish(game);
     const d = this.data;
     if (!game.active.size) { this.note("Quiet chapter: no participants, settlement unchanged."); d.chapter++; this.changed(); return; }
     d.settlement = Math.max(0, Math.min(100, d.settlement + (game.winner === "red" ? 10 : game.winner === "blue" ? -10 : 0)));

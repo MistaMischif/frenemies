@@ -2,6 +2,7 @@ const el = (id) => document.getElementById(id);
 let socket;
 document.body.classList.toggle("compact", new URLSearchParams(location.search).get("layout") === "compact");
 function render(s) {
+  if(s.creator){el("experience-title").textContent=s.creator.title;for(const t of ["red","blue"])document.querySelector(".team."+t+" h2").textContent=s.creator.factions?.[t]||(t==="red"?"HUMANS":"ZOMBIES");}
   window.dispatchEvent(new CustomEvent("battle-state", { detail: s }));
   document.body.classList.toggle("killed", s.cleared);
   el("arena").classList.toggle("cleared", s.cleared);

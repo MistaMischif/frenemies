@@ -19,6 +19,7 @@
     image.src = `/characters/${name}.png`;
     return image;
   });
+  const equippedImages = new Map();
   let environmentImage, environmentUrl;
   const color = { red: "#ff6179", blue: "#65b9ff" };
   new ResizeObserver(() => {
@@ -89,9 +90,13 @@
       ctx.fillRect(-18 + i * 14, -h * 0.29, 8, 12);
     }
     ctx.globalAlpha = lineStrength > 0 ? 1 : 0.35;
-    const visible = Math.min(count || (state?.status === "lobby" ? 3 : 0), 6);
+    const roster = state?.roster?.[t] || [];
+    const visible = roster.length || Math.min(count || (state?.status === "lobby" ? 3 : 0), 6);
     for (let i = 0; i < visible; i++) {
-      const image = sprites[t][i % sprites[t].length];
+      const player=roster[i];
+      let image = sprites[t][i % sprites[t].length];
+      if(player?.asset){if(!equippedImages.has(player.asset)){const img=new Image();img.src=player.asset;equippedImages.set(player.asset,img);}image=equippedImages.get(player.asset);}
+
       if (!image.complete || !image.naturalWidth) continue;
       const height = Math.min(h * 0.62, 120) * (i < 3 ? 0.88 : 1);
       const width = height * image.naturalWidth / image.naturalHeight;
@@ -106,6 +111,7 @@
       // Zombies already face left; cancel the squad's mirror for their artwork.
       if (!left) ctx.scale(-1, 1);
       ctx.drawImage(image, -width / 2, -height, width, height);
+      if(player){text(player.name.length>12?player.name.slice(0,11)+"…":player.name,0,-height-5,Math.max(9,Math.min(12,w/95)),"#ffffff");}
       ctx.restore();
     }
     ctx.globalAlpha = 1;
