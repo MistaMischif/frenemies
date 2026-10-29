@@ -44,6 +44,17 @@ function render() {
   const s = state,
     o = s.operation;
   document.body.classList.toggle("cleared", !!s.cleared);
+  const director = o?.director;
+  $("host-caption").textContent =
+    o?.status === "active"
+      ? director?.cue || ""
+      : o?.status === "delivered"
+        ? "The settlement lights up. Your convoy made it home."
+        : o?.status === "lost"
+          ? "The convoy is lost. This crossing will remember the stand."
+          : "";
+  $("host-choice").hidden = !director?.choice;
+  document.body.dataset.pacing = director?.phase || "build";
   $("mode").textContent = s.simulated
     ? "SIMULATED WAR · NO LIVE RESULTS"
     : "PERSISTENT SHARED WAR";
@@ -81,6 +92,10 @@ function render() {
     const a = b.dataset.action;
     b.disabled =
       busy ||
+      (["director-on", "director-off", "rescue", "press-on"].includes(a) &&
+        (o?.status !== "active" || o.commander !== s.channel)) ||
+      (["rescue", "press-on"].includes(a) && !o?.director?.choice) ||
+      (a === "rescue" && s.supplies < 10) ||
       (a === "join" ? s.enlisted : a === "leave" ? !s.enlisted : !s.enlisted) ||
       (a === "launch" && o?.status === "active") ||
       (["direct", "detour"].includes(a) &&
@@ -247,7 +262,7 @@ function draw(t) {
   const house = image("/environments/c2g/Map_zone1_house01.png");
   if (house.complete && house.naturalWidth)
     ctx.drawImage(house, 1160, 270, 180, 155);
-  if (o?.route && o.status === "active") {
+  if (o?.route && o.status === "active" && o.pressure > 10) {
     ctx.strokeStyle = "#ed9c6a";
     ctx.lineWidth = 2;
     const pulse = reduced.matches ? 0.5 : (t % 1800) / 1800;
@@ -257,6 +272,26 @@ function draw(t) {
     ctx.lineTo(1340 - (1340 - x) * pulse, 360 + 60 * pulse);
     ctx.stroke();
     ctx.globalAlpha = 1;
+  }
+  // Readable consequences for viewers who never issue commands.
+  if (o?.director?.rescued) {
+    ctx.fillStyle = "#dbedaa";
+    ctx.font = "bold 18px Segoe UI";
+    ctx.fillText("CREW RESCUED", 1080, 245);
+  }
+  if (o?.status === "delivered") {
+    ctx.fillStyle = "#ffe4a3aa";
+    ctx.beginPath();
+    ctx.arc(1250, 345, 42, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  if (o?.status === "active" && o.hull < 40) {
+    ctx.fillStyle = "#26323599";
+    for (let i = 0; i < 4; i++) {
+      ctx.beginPath();
+      ctx.arc(x + 15, y - 40 - i * 15, 10 + i * 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
   requestAnimationFrame(draw);
 }

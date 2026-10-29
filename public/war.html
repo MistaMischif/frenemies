@@ -39,6 +39,7 @@
           <span id="operation">Awaiting dispatch</span
           ><span id="route">SCOUT → COMMIT → DELIVER</span>
         </div>
+        <div class="host-caption" id="host-caption" aria-live="polite"></div>
         <div class="scene-bottom">
           <div id="stakes">
             The next delivery changes this world's supplies.
@@ -69,6 +70,24 @@
           <a href="/creator">Your art & identity ↗</a>
         </div>
         <p id="command-help"></p>
+        <div id="host-choice" hidden>
+          <p>
+            The host has spotted stranded crew. Rescue costs 10 reserves and a
+            12-second stop; completion restores 5 settlement integrity.
+          </p>
+          <button data-action="rescue">Rescue the crew</button
+          ><button data-action="press-on">Keep moving</button>
+        </div>
+        <details>
+          <summary>Optional host adjustments</summary>
+          <p>
+            Adaptive pacing runs automatically. Only the current commander can
+            change the shared host. It uses battlefield pressure, not spending
+            or inferred viewer emotions.
+          </p>
+          <button data-action="director-off">Use standard pacing</button
+          ><button data-action="director-on">Use adaptive host</button>
+        </details>
         <div class="buttons">
           <button data-action="join">Join shared war</button
           ><button data-action="launch">Dispatch convoy</button

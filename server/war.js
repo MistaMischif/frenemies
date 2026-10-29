@@ -1,3 +1,4 @@
+import { createDirector, direct } from "./director.js";
 import { createHash } from "node:crypto";
 export const WAR_KEY = "__shared_war_v1";
 const roles = ["escort", "fortify", "scout", "assault"];
@@ -20,6 +21,8 @@ export class War {
       accepted: 0,
       decisions: 0,
     };
+    if (this.s.operation && !this.s.operation.director)
+      this.s.operation.director = createDirector();
     this.intents = new Map();
     this.lastTick = now();
     this.dirty = false;
@@ -74,6 +77,7 @@ export class War {
         contributions: {},
         started: this.now(),
         intel: 0,
+        director: createDirector(),
       };
       this.intents.clear();
       this.lastTick = this.now();
@@ -85,7 +89,40 @@ export class War {
       return;
     }
     if (!o || o.status !== "active") throw Error("Dispatch a convoy first.");
-    if (action === "take-command") {
+    if (
+      ["director-on", "director-off", "rescue", "press-on"].includes(action)
+    ) {
+      if (o.commander !== channel)
+        throw Error(
+          "Only the current commander can adjust the host or resolve its choice.",
+        );
+      const d = o.director;
+      if (action.startsWith("director-")) {
+        d.enabled = action === "director-on";
+        d.phase = "build";
+        d.ticks = 0;
+        d.intensity = 0;
+        if (!d.enabled) d.choice = null;
+        d.cue = d.enabled
+          ? "The host is watching the battlefield."
+          : "The convoy follows the standard threat schedule.";
+        d.cueId++;
+      } else {
+        if (!d.choice) throw Error("There is no pending rescue decision.");
+        if (action === "rescue") {
+          if (s.supplies < 10)
+            throw Error("Rescue requires 10 shared reserves.");
+          s.supplies -= 10;
+          d.rescueTicks = 2;
+          d.cue =
+            "Rescue committed. The convoy holds for 12 active seconds while the crew boards.";
+        } else
+          d.cue =
+            "The commander keeps the convoy moving. The supply mission comes first.";
+        d.choice = null;
+        d.cueId++;
+      }
+    } else if (action === "take-command") {
       if (
         this.s.communities[o.commander]?.active !== false &&
         this.now() - (o.commandAt || o.started) < 120000
@@ -103,6 +140,11 @@ export class War {
           "Viewers must scout until route intel reaches 3 before the route decision.",
         );
       o.route = action;
+      o.director.cue =
+        action === "direct"
+          ? "The convoy takes the exposed road. Escort it quickly and protect its flank."
+          : "The convoy takes the longer route. Keep the crossing defended while it advances.";
+      o.director.cueId++;
     } else if (action === "reserves") {
       if (o.choices[channel])
         throw Error(
@@ -202,10 +244,59 @@ export class War {
     };
     // Scouting earns a decision without suffering a hidden pre-route attack.
     if (o.route) {
+      const d = o.director,
+        pacing = direct(d, o);
+      if (pacing.changed)
+        this.event("host", d.cue, {
+          operation: o.id,
+          phase: d.phase,
+          intensity: d.intensity,
+        });
+      if (
+        d.enabled &&
+        !d.offered &&
+        o.progress >= 25 &&
+        o.progress < 80 &&
+        o.hull >= 35 &&
+        d.phase === "relax"
+      ) {
+        d.offered = true;
+        d.choice = { remaining: 5 };
+        d.cue =
+          "Stranded crew spotted. Rescue: spend 10 reserves and stop for 12 active seconds to restore 5 settlement integrity. Or keep moving. Default: continue.";
+        d.cueId++;
+        this.event("host", d.cue, {
+          operation: o.id,
+          choice: "rescue",
+          cost: 10,
+          holdTicks: 2,
+          benefit: 5,
+        });
+      } else if (d.choice && --d.choice.remaining <= 0) {
+        d.choice = null;
+        d.cue = "No diversion ordered. The convoy stays on its route.";
+        d.cueId++;
+        this.event("host", d.cue, { operation: o.id, default: "press-on" });
+      }
+      const held = d.rescueTicks > 0;
+      if (held && --d.rescueTicks === 0) {
+        d.rescued = true;
+        this.s.integrity = Math.min(100, this.s.integrity + 5);
+        d.cue =
+          "Crew aboard. Settlement integrity restored by 5. The convoy resumes.";
+        d.cueId++;
+        this.event("rescue", d.cue, {
+          operation: o.id,
+          integrity: this.s.integrity,
+        });
+      }
       const exposed = o.route === "direct";
       o.pressure = Math.max(
         0,
-        Math.min(100, o.pressure + 4 - n.assault * 0.9 - n.scout * 0.3),
+        Math.min(
+          100,
+          o.pressure + pacing.spawn - n.assault * 0.9 - n.scout * 0.3,
+        ),
       );
       this.s.crossing = Math.max(
         0,
@@ -213,14 +304,32 @@ export class War {
       );
       const damage = Math.max(
         0,
-        (exposed ? 6 : 3) + o.pressure / 15 - n.fortify * 0.6,
+        (pacing.engaged ? (exposed ? 6 : 3) : 0) +
+          o.pressure / 15 -
+          n.fortify * 0.6,
       );
       o.hull = Math.max(0, o.hull - damage);
+      d.damage = damage;
       o.progress = Math.min(
         100,
         o.progress +
-          n.escort * (exposed ? 1.5 : 1) +
-          (this.s.crossing >= 60 ? 3 : 0),
+          (held
+            ? 0
+            : n.escort * (exposed ? 1.5 : 1) + (this.s.crossing >= 60 ? 3 : 0)),
+      );
+    }
+    if (before.crossing < 60 && this.s.crossing >= 60) {
+      const names = [
+        ...new Set(
+          intents
+            .filter((x) => x.role === "fortify")
+            .map((x) => this.s.communities[x.channel]?.name),
+        ),
+      ].filter(Boolean);
+      this.event(
+        "breakthrough",
+        `${names.join(" + ")} secured the crossing. The convoy can move faster.`,
+        { operation: o.id, crossing: this.s.crossing },
       );
     }
     for (const x of intents) {

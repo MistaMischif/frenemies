@@ -278,3 +278,49 @@ body.overlay.cleared {
 body.overlay.cleared > * {
   visibility: hidden;
 }
+
+.host-caption {
+  position: absolute;
+  top: 64px;
+  left: 5%;
+  right: 5%;
+  max-width: 820px;
+  padding: 14px 20px;
+  background: #071217df;
+  border-left: 3px solid #d6e79f;
+  font-size: clamp(12px, 1.5vw, 19px);
+  line-height: 1.45;
+  border-radius: 4px;
+  pointer-events: none;
+}
+.host-caption:empty {
+  display: none;
+}
+details {
+  margin: 18px 0;
+}
+summary {
+  cursor: pointer;
+  color: #a8b9b5;
+}
+#host-choice {
+  padding: 15px;
+  border: 1px solid #d6e79f;
+  background: #25352c;
+}
+body.overlay header,
+body.overlay .roles,
+body.overlay .hint,
+body.overlay .lower,
+body.overlay main > .panel {
+  display: none;
+}
+body.overlay .mast {
+  padding: 0 20px;
+}
+body.overlay .theatre {
+  margin-top: 8px;
+}
+body.overlay .gauges {
+  opacity: 0.8;
+}
