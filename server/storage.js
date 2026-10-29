@@ -19,7 +19,43 @@ export async function openStorage({ databaseUrl, dataDir }) {
     await pool.query(
       "CREATE TABLE IF NOT EXISTS frenemies_follow_claims (channel_id text NOT NULL, user_id text NOT NULL, PRIMARY KEY(channel_id,user_id))",
     );
+    await pool.query(
+      "CREATE TABLE IF NOT EXISTS frenemies_sessions (id text PRIMARY KEY, payload jsonb NOT NULL, expires_at bigint NOT NULL)",
+    );
+    await pool.query(
+      "CREATE INDEX IF NOT EXISTS frenemies_sessions_expiry ON frenemies_sessions(expires_at)",
+    );
     return {
+      sessions: {
+        async get(id, now) {
+          const r = await pool.query(
+            "SELECT payload FROM frenemies_sessions WHERE id=$1 AND expires_at>$2",
+            [id, now],
+          );
+          return r.rows[0]?.payload || null;
+        },
+        async set(id, payload, expires) {
+          await pool.query(
+            "INSERT INTO frenemies_sessions(id,payload,expires_at) VALUES($1,$2::jsonb,$3) ON CONFLICT(id) DO UPDATE SET payload=EXCLUDED.payload,expires_at=EXCLUDED.expires_at",
+            [id, JSON.stringify(payload), expires],
+          );
+        },
+        async touch(id, expires) {
+          await pool.query(
+            "UPDATE frenemies_sessions SET expires_at=$2 WHERE id=$1",
+            [id, expires],
+          );
+        },
+        async destroy(id) {
+          await pool.query("DELETE FROM frenemies_sessions WHERE id=$1", [id]);
+        },
+        async prune(now) {
+          await pool.query(
+            "DELETE FROM frenemies_sessions WHERE expires_at<=$1",
+            [now],
+          );
+        },
+      },
       mode: "PostgreSQL",
       data: Object.fromEntries(result.rows.map((r) => [r.id, r.payload])),
       async claimFollow(channelId, userId) {

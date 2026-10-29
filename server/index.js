@@ -1,3 +1,4 @@
+import { SessionStore } from "./sessions.js";
 import { Show } from "./show.js";
 import { SaveQueue } from "./save-queue.js";
 import { Economy } from "./economy.js";
@@ -54,6 +55,7 @@ const storage = await openStorage({
   dataDir,
 });
 const persisted = storage.data;
+const sessionStore = new SessionStore(storage);
 const barrageLedger = await openBarrageLedger({
   databaseUrl: process.env.DATABASE_URL,
   dataDir,
@@ -376,6 +378,7 @@ setInterval(() => extension.reconcile(), 300000).unref();
 app.use(
   session({
     name: "frenemies.sid",
+    store: sessionStore,
     secret: process.env.SESSION_SECRET || randomBytes(32).toString("hex"),
     resave: false,
     saveUninitialized: false,
@@ -565,12 +568,10 @@ app.post("/api/control", owner, async (req, res) => {
     }
   }
   if (g.territory.s.status === "active")
-    return res
-      .status(409)
-      .json({
-        error:
-          "Finish the territory expedition before using classic battle controls.",
-      });
+    return res.status(409).json({
+      error:
+        "Finish the territory expedition before using classic battle controls.",
+    });
   if ((action === "start" || action === "next") && req.room.environmentSaving)
     return res
       .status(409)
@@ -589,12 +590,10 @@ app.post("/api/control", owner, async (req, res) => {
           }),
         )
       )
-        return res
-          .status(400)
-          .json({
-            error:
-              "Seat at least one eligible Human and one Zombie before starting.",
-          });
+        return res.status(400).json({
+          error:
+            "Seat at least one eligible Human and one Zombie before starting.",
+        });
       g.environment =
         environmentList(req.room).find(
           (e) => e.id === req.room.nextEnvironment,
@@ -698,17 +697,15 @@ app.get("/api/player/:key", (req, res) => {
       .status(401)
       .json({ login: "/auth/twitch?shop=" + encodeURIComponent(room.overlay) });
   const a = room.economy.d.accounts[viewer.id] || room.economy.defaultAccount();
-  res
-    .set("Cache-Control", "no-store")
-    .json({
-      csrf: req.session.csrf,
-      name: viewer.login,
-      ...a,
-      ownedItems: room.economy
-        .catalog(room.overlay, true)
-        .items.filter((i) => a.owned.includes(i.id)),
-      joined: !!room.campaign.data.characters[viewer.id],
-    });
+  res.set("Cache-Control", "no-store").json({
+    csrf: req.session.csrf,
+    name: viewer.login,
+    ...a,
+    ownedItems: room.economy
+      .catalog(room.overlay, true)
+      .items.filter((i) => a.owned.includes(i.id)),
+    joined: !!room.campaign.data.characters[viewer.id],
+  });
 });
 app.post("/api/player/:key", async (req, res) => {
   const room = publicRoom(req.params.key),
@@ -830,11 +827,9 @@ app.post("/api/environments", owner, async (req, res) => {
       persisted[room.id].environments = room.environmentAssets;
       persisted[room.id].nextEnvironment = previous;
     }
-    res
-      .status(400)
-      .json({
-        error: added ? "Could not save artwork. Please retry." : error.message,
-      });
+    res.status(400).json({
+      error: added ? "Could not save artwork. Please retry." : error.message,
+    });
   } finally {
     room.environmentSaving = false;
   }
@@ -1193,6 +1188,7 @@ process.on("SIGTERM", async () => {
   for (const ws of wss.clients) ws.close();
   server.close();
   await Promise.allSettled([...writes.values()]);
+  sessionStore.close();
   await storage.close();
   await barrageLedger.close();
   process.exit(0);

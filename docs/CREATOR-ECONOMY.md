@@ -1,4 +1,4 @@
-# Creator platform 1.8.0
+# Creator platform 1.8.1
 
 Use `/creator` after broadcaster sign-in, or start a simulated demo. Tabs separate Broadcast, Identity, Episodes, Rewards and Results. One game-server process per database is supported. PostgreSQL and local JSON both work; no paid service dependency was added.
 
@@ -46,4 +46,8 @@ Daily D1/D7 cohorts remain supplementary, using exact UTC days, 90 days of visit
 
 ## Verification and limits
 
-64 automated tests include 40/2,000-player engine simulations, 100-to-1 fairness, reward/idempotency/cap behavior, immutable published rules, shared unlocks, save coalescing/failure, identity/CSRF checks, control-sample safety and retention math. This is not a 2,000-connection network load certification. Browser QA covers demo entry, broadcast sample creation, episode authoring/launch, identity editing and player-hub flow. Live OAuth and EventSub still require a creator pilot after deployment. No market adoption, retention lift or financial return is established by these tests.
+66 automated tests include 40/2,000-player engine simulations, 100-to-1 fairness, reward/idempotency/cap behavior, immutable published rules, shared unlocks, save coalescing/failure, identity/CSRF checks, control-sample safety and retention math. This is not a 2,000-connection network load certification. Browser QA covers demo entry, broadcast sample creation, episode authoring/launch, identity editing and player-hub flow. Live OAuth and EventSub still require a creator pilot after deployment. No market adoption, retention lift or financial return is established by these tests.
+
+## Session storage (1.8.1)
+
+Production uses an expiring session table in the existing PostgreSQL database, with hashed session IDs. Cookie settings remain HttpOnly/SameSite=Lax/Secure in production; 12-hour expiry. Database cleanup occurs with session creation/update, at most hourly, not through idle queries that prevent the database from sleeping. Local self-hosting uses a bounded 10,000-session in-memory store with expiry sweeping; local sessions reset on restart. Tests cover capacity, expiry, adapter restart and error propagation.
