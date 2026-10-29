@@ -23,6 +23,8 @@ export class War {
     };
     if (this.s.operation && !this.s.operation.director)
       this.s.operation.director = createDirector();
+    if (this.s.operation)
+      this.s.operation.visual ||= { actions: {}, decisions: {} };
     this.intents = new Map();
     this.lastTick = now();
     this.dirty = false;
@@ -78,6 +80,7 @@ export class War {
         started: this.now(),
         intel: 0,
         director: createDirector(),
+        visual: { actions: {}, decisions: {} },
       };
       this.intents.clear();
       this.lastTick = this.now();
@@ -162,6 +165,7 @@ export class War {
       this.finish("evacuated");
     } else throw Error("Unknown command.");
     if (o.commander === channel) o.commandAt = this.now();
+    o.visual.decisions[action] = (o.visual.decisions[action] || 0) + 1;
     c.decisions++;
     s.decisions++;
     this.event("decision", `${c.name}: ${action}.`, {
@@ -202,6 +206,8 @@ export class War {
     if (!p.channels.includes(channel)) p.channels.push(channel);
     if (!p.days.includes(day)) p.days.push(day);
     this.s.players[key] = p;
+    const counts = this.s.operation.visual.actions;
+    counts[role] = (counts[role] || 0) + 1;
     this.s.accepted++;
     this.s.communities[channel].actions++;
     this.intents.set(key, {
@@ -414,6 +420,19 @@ export class War {
     const { players, events, ...world } = this.s;
     return {
       ...world,
+      visualRoles: Object.fromEntries(
+        roles.map((role) => [
+          role,
+          this.s.operation?.status === "active"
+            ? [...this.intents.values()].filter(
+                (x) =>
+                  x.role === role &&
+                  this.now() - x.at <= 20000 &&
+                  this.s.communities[x.channel]?.active !== false,
+              ).length
+            : 0,
+        ]),
+      ),
       simulated: this.simulated,
       events: events
         .filter((e) => e.kind !== "action" && e.kind !== "resolution")

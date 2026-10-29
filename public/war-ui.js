@@ -1,3 +1,5 @@
+import { BattleReactions } from "/war-reactions.js";
+const reactions = new BattleReactions();
 const $ = (id) => document.getElementById(id),
   key = location.pathname.split("/")[2];
 document.body.classList.toggle("overlay", !!key);
@@ -33,6 +35,7 @@ async function load() {
     );
     if (!r.ok) throw Error("Sign in or start a demo from /control.");
     state = await r.json();
+    reactions.accept(state, performance.now());
     csrf = state.csrf || csrf;
     render();
     $("connection").textContent = "CONNECTED  -  " + state.persistence;
@@ -246,12 +249,16 @@ function draw(t) {
     "/characters/char02V01.png",
     "/characters/char03V01.png",
   ];
-  for (let i = 0; i < 3; i++) {
+  for (
+    let i = 0;
+    i < Math.min(9, 2 + Math.ceil(Math.sqrt(s?.visualRoles?.escort || 0)));
+    i++
+  ) {
     const im = image(roster[i]?.asset || fallback[i]);
     if (!im.complete || !im.naturalWidth) continue;
     const height = 100,
       width = (height * im.naturalWidth) / im.naturalHeight,
-      px = x - 105 - i * 40,
+      px = Math.max(45, x - 105 - i * 28),
       bob = reduced.matches ? 0 : Math.sin(t / 230 + i) * 2;
     ctx.drawImage(im, px - width / 2, y - height + 25 + bob, width, height);
   }
@@ -293,6 +300,7 @@ function draw(t) {
       ctx.fill();
     }
   }
+  reactions.draw(ctx, s, t, x, reduced.matches);
   requestAnimationFrame(draw);
 }
 load();

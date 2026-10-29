@@ -332,3 +332,6 @@ body.overlay header #connection {
   font-size: 10px;
   letter-spacing: 0;
 }
+
+/* Keep instructions below the action stage, never over crowd reactions. */
+.scene-bottom { position: relative; background: #0c1b20; padding-top: 16px; }
