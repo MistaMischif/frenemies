@@ -155,6 +155,7 @@ export function connectChat(room, tokens) {
 }
 export async function applyEvent(room, type, e) {
   const g = room.game;
+  if(room.territory?.s.status==="active") return;
   if (type === "channel.follow") {
     const name = String(e.user_login || "").toLowerCase();
     if (

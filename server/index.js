@@ -1,5 +1,7 @@
 import express from "express";
 import { environmentList, parseEnvironmentUpload } from "./environments.js";
+import { TerritoryGame } from "./territory.js";
+import { createHash } from "node:crypto";
 import { Tabletop } from "./tabletop.js";
 import { Campaign } from "./campaign.js";
 import session from "express-session";
@@ -115,11 +117,19 @@ function makeRoom(id, login, simulated = false) {
   });
   room.game.campaign = room.campaign;
   room.game.tabletop = new Tabletop(room.game, room.campaign);
+  room.territory = new TerritoryGame(room.campaign);
+  room.game.territory = room.territory;
+  room.bridgeHash = old.bridgeHash;
+  room.observation = null;
   for(const [key,c] of Object.entries(room.campaign.data.characters)) if(key.startsWith("table:")) room.campaign.identify(key,c.name);
   room.chat = (userId, name, text) => {
     name = name.toLowerCase(); text = text.trim().toLowerCase();
     if (name === room.game.host || room.game.blockedNames.has(name) || room.game.blockedCommands.has(text)) return;
     room.campaign.identify(userId, name);
+    if(room.territory.s.status==="active"){
+      if(["!human","!zombie"].includes(text)) {if(room.game.players.has(name))return;}
+      else {room.territory.vote(userId,name,room.game.players.get(name),text);return;}
+    }
     if (text === "!status") { const status = room.campaign.status(name); if (status) room.game.say(status); return; }
     if (text === "!rescue") { if (room.campaign.rescue(name, room.game)) room.game.say(`${name} recovered at the clinic`); return; }
     const character = room.campaign.data.characters[userId];
@@ -130,10 +140,12 @@ function makeRoom(id, login, simulated = false) {
       room.campaign.join(userId, name, room.game.players.get(name));
   };
   let eventQueue = Promise.resolve();
+  room.enqueue = fn => {const run=eventQueue.catch(()=>{}).then(fn);eventQueue=run;return run;};
   room.campaignEvent = (type, event, receipt) => {
     const run = eventQueue.catch(() => {}).then(async () => {
       const changed = room.campaign.event(type, event, receipt);
-      if (!changed && !room.campaign.data.receipts[receipt]) return;
+      const territoryChanged = room.territory.event(type,event,receipt,room.game.players);
+      if (!changed && !territoryChanged && !room.campaign.data.receipts[receipt]) return;
       if (!simulated) {
         persisted[id].campaign = room.campaign.data;
         await save(id);
@@ -337,6 +349,7 @@ app.post("/api/control", owner, (req, res) => {
     return res.sendStatus(403);
   const g = req.room.game;
   const action = req.body.action;
+  if(g.territory.s.status==="active")return res.status(409).json({error:"Finish the territory expedition before using classic battle controls."});
   if ((action === "start" || action === "next") && req.room.environmentSaving) return res.status(409).json({error:"Wait for the environment to finish saving."});
   if (action === "start" || action === "next") {
     if (!["running", "paused"].includes(g.status)) {
@@ -404,23 +417,24 @@ app.get("/environment/:key/:id", (req, res) => {
   if (!asset) return res.sendStatus(404);
   res.set("Cache-Control", "private, max-age=86400").type("image/jpeg").send(Buffer.from(asset.image.split(",")[1], "base64"));
 });
-app.post("/tabletop/new", (req,res) => {
+app.post(["/tabletop/new","/territory/new"], (req,res) => {
   if(!req.session.csrf || req.body.csrf!==req.session.csrf) return res.sendStatus(403);
   if(rooms.size>1000)return res.sendStatus(503);
   const local=!production && ["127.0.0.1","::1","::ffff:127.0.0.1"].includes(req.socket.remoteAddress);
   const id=local ? "local-tabletop" : "demo-"+randomBytes(12).toString("hex");
   const room=rooms.get(id)||makeRoom(id,"table-host",!local);
   if(!local)room.expires=Date.now()+12*3600000;
-  if(!["running","paused"].includes(room.game.status))room.game.tabletop.configure(true);
+  if(!["running","paused"].includes(room.game.status))room.game.tabletop.configure(req.path!=="/territory/new");
   room.nextEnvironment="forest";
   req.session.owner=id;req.session.csrf=randomBytes(24).toString("hex");
-  res.redirect(303,"/tabletop");
+  res.redirect(303,req.path==="/territory/new"?"/territory":"/tabletop");
 });
 app.get("/api/tabletop", owner, (req,res)=>res.json({csrf:req.session.csrf,state:req.room.game.snapshot(),overlay:`${base}/overlay/${req.room.overlay}`,persistent:!req.room.game.simulated,characters:Object.entries(req.room.campaign.data.characters).map(([id,c])=>({...c,local:id.startsWith("table:"),joined:req.room.game.players.has(c.name)}))}));
 app.post("/api/tabletop", owner, (req,res)=>{
   if(!req.session.csrf||req.get("x-csrf-token")!==req.session.csrf)return res.sendStatus(403);
   const room=req.room,g=room.game,table=g.tabletop,b=req.body;
   try{
+    if(room.territory.s.status==="active")throw Error("Use territory controls until this expedition finishes.");
     if(b.action==="configure")table.configure(b.enabled===true,b.scenario);
     else if(b.action==="join"){
       if(["running","paused"].includes(g.status))throw Error("Seat physical players between battles.");
@@ -449,6 +463,42 @@ app.post("/api/tabletop", owner, (req,res)=>{
     broadcast(room);res.json(g.snapshot());
   }catch(error){res.status(400).json({error:error.message});}
 });
+const territoryPayload=room=>({state:room.territory.snapshot(),campaign:room.campaign.snapshot(),overlay:`${base}/territory/${room.overlay}`,bridge:`${base}/api/living-table/${room.overlay}`});
+app.get("/api/territory",owner,(req,res)=>res.json({...territoryPayload(req.room),csrf:req.session.csrf,persistent:!req.room.game.simulated,observation:req.room.observation}));
+app.get("/api/territory/view/:key",(req,res)=>{const room=[...rooms.values()].find(r=>r.overlay===req.params.key);if(!room)return res.sendStatus(404);res.json(territoryPayload(room));});
+app.post("/api/territory",owner,async(req,res)=>{
+ if(!req.session.csrf||req.get("x-csrf-token")!==req.session.csrf)return res.sendStatus(403);
+ const room=req.room;
+ try{await room.enqueue(async()=>{
+  if(["running","paused"].includes(room.game.status))throw Error("Finish the classic battle before starting territory play.");
+  const before=structuredClone(room.campaign.data),votes=new Map(room.territory.votes);
+  try{
+   if(req.body.action==="resolve-vote")room.territory.resolve(req.body.revision,req.body.requestId);
+   else room.territory.execute(req.body);
+   if(!room.game.simulated){persisted[room.id].campaign=room.campaign.data;await save(room.id);}
+   room.observation=null;broadcast(room);
+  }catch(error){room.campaign.data=before;room.territory.votes=votes;if(!room.game.simulated)persisted[room.id].campaign=before;throw error;}
+ });res.json(territoryPayload(room));}catch(error){res.status(400).json({error:error.message});}
+});
+app.post("/api/territory/bridge-key",owner,async(req,res)=>{
+ if(!req.session.csrf||req.get("x-csrf-token")!==req.session.csrf)return res.sendStatus(403);
+ const key=randomBytes(32).toString("hex"),hash=createHash("sha256").update(key).digest("hex"),room=req.room,old=room.bridgeHash;
+ try{room.bridgeHash=hash;if(!room.game.simulated){persisted[room.id].bridgeHash=hash;await save(room.id);}res.json({key,observeUrl:`${base}/api/living-table/observe`});}
+ catch{room.bridgeHash=old;if(!room.game.simulated)persisted[room.id].bridgeHash=old;res.status(503).json({error:"Could not save pairing. Retry."});}
+});
+app.get("/api/living-table/:key",(req,res)=>{
+ const room=[...rooms.values()].find(r=>r.overlay===req.params.key);if(!room)return res.sendStatus(404);
+ res.json({protocol:"c2g.territory.v1",revision:room.territory.s.revision,definition:room.territory.definition(),figures:Object.values(room.territory.s.pieces),state:room.territory.snapshot()});
+});
+app.post("/api/living-table/observe",(req,res)=>{
+ const token=(req.get("authorization")||"").replace(/^Bearer /,"");if(!/^[a-f0-9]{64}$/.test(token))return res.sendStatus(401);
+ const hash=createHash("sha256").update(token).digest("hex"),room=[...rooms.values()].find(r=>r.bridgeHash===hash);if(!room)return res.sendStatus(401);
+ const {pieceId,target,revision}=req.body,piece=Object.values(room.territory.s.pieces).find(p=>p.toyId===pieceId||p.tag===pieceId);
+ if(!piece||revision!==room.territory.s.revision||!room.territory.snapshot().map.some(t=>t.id===target))return res.status(409).json({error:"Unknown piece/territory or stale observation."});
+ if(piece.location===target)return res.json({status:"already-synchronized"});
+ room.observation={pieceId:piece.id,target,revision,receivedAt:Date.now()};res.status(202).json({status:"awaiting-host-confirmation"});
+});
+app.get(["/territory","/territory/:key"],(_,res)=>res.sendFile(path.join(root,"public/territory.html")));
 app.get("/tabletop", (_,res)=>res.sendFile(path.join(root,"public/tabletop.html")));
 app.get("/control", (_, res) =>
   res.sendFile(path.join(root, "public/control.html")),
@@ -515,7 +565,7 @@ setInterval(() => {
     }
     const g = room.game;
     if (
-      g.simulated && !g.tabletop.enabled &&
+      g.simulated && !g.tabletop.enabled && g.territory.s.status!=="active" &&
       g.status === "running" &&
       Math.floor(g.elapsed / 2000) !== room.simTick
     ) {

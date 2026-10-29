@@ -46,7 +46,7 @@ export class Game {
   canBarrage(name) {
     const t = this.players.get(name);
     return (
-      !this.tabletop?.enabled &&
+      !this.tabletop?.enabled && this.territory?.s.status!=="active" &&
       this.status === "running" &&
       this.elapsed >= this.freezeUntil &&
       t &&
@@ -57,7 +57,7 @@ export class Game {
     );
   }
   barrageShot(name) {
-    if (this.tabletop?.enabled) return false;
+    if (this.tabletop?.enabled || this.territory?.s.status==="active") return false;
     const t = this.players.get(name);
     if (
       this.status !== "running" ||
@@ -177,7 +177,7 @@ export class Game {
     return totals;
   }
   advance(ms) {
-    if (this.tabletop?.enabled) return;
+    if (this.tabletop?.enabled || this.territory?.s.status==="active") return;
     if (this.status !== "running") return;
     this.elapsed = Math.min(180000, this.elapsed + ms);
     if (this.elapsed >= this.nextTick) {
@@ -315,6 +315,7 @@ export class Game {
   }
   snapshot() {
     return {
+      territory: this.territory?.snapshot(),
       tabletop: this.tabletop?.snapshot(),
       environment: this.environment || { id: "default", name: "Neon battlefield", url: null },
       campaign: this.campaign?.snapshot(),

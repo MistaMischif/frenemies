@@ -3,25 +3,24 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Frenemies — Your chat. Two teams. One battle.</title>
+    <title>Frenemies - C2G Territory Campaign</title>
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
     <main class="shell">
       <div class="brand">FRENEMIES<span> /</span></div>
       <section class="hero">
-        <div class="eyebrow">THE STREAM IS YOUR BATTLEFIELD</div>
-        <h1>Friends in chat.<br />Enemies in battle.</h1>
+        <div class="eyebrow">THE TABLE AND THE STREAM SHARE A WORLD</div>
+        <h1>Move your figures.<br />Fight for the map.</h1>
         <p class="lead">
-          Humans vs Zombies. Three minutes. Your viewers pick a team and call the
-          shots. Every battle becomes a chapter in your community’s persistent outbreak.
+          Humans vs Zombies. Claim connected territories, scavenge parts, craft equipment and recover infected figures. Play at the table or let Twitch chat command your faction.
         </p>
-        <div class="row">
+        <div class="row"><form method="post" action="/territory/new"><!--CSRF--><button class="primary">Play C2G Territory Campaign</button></form>
           <a class="button primary" href="/auth/twitch"
             >Connect your Twitch channel ↗</a
           >
           <form method="post" action="/demo">
-            <!--CSRF--><button>Try simulated chat</button>
+            <!--CSRF--><button>Try classic chat battle</button>
           </form>
         </div>
         <p class="mini">
@@ -31,28 +30,28 @@
       </section>
       <section class="steps">
         <div class="panel">
-          <strong>01 / PICK A TEAM</strong>
-          <h2>Human or Zombie?</h2>
+          <strong>01 / MOVE AND CLAIM</strong>
+          <h2>A map to conquer.</h2>
           <p>
-            Type <code>!human</code> or <code>!zombie</code> in chat. Build a character across streams.
+            Six persistent figures. Twelve connected locations. Claim eight territories to win.
           </p>
         </div>
         <div class="panel">
-          <strong>02 / CALL THE SHOTS</strong>
-          <h2>Make it count.</h2>
+          <strong>02 / SCAVENGE AND CRAFT</strong>
+          <h2>Build your advantage.</h2>
           <p>
-            <code>!attack !defend !heal !surge</code><br />One vote every two
-            seconds. Your team's most popular action wins.
+            Collect launchers, bipods and sensors. Reach a workshop to equip an individual figure.
           </p>
         </div>
         <div class="panel">
-          <strong>03 / HOLD THE LINE</strong>
+          <strong>03 / FIGHT AND RECOVER</strong>
           <h2>Leave a legacy.</h2>
           <p>
             Hold the settlement, survive infection, and rescue your character with community supplies. Raids and Hype Trains bring convoy objectives.
           </p>
         </div>
       </section>
-    <form method="post" action="/tabletop/new"><!--CSRF--><button class="primary">Start physical tabletop companion</button></form><p>12 rounds, printed cards, shared outbreak campaign. <a href="/tabletop-kit.pdf">Download the print-and-play kit</a>.</p></main>
+    <form method="post" action="/territory/new"><!--CSRF--><button class="primary">Play C2G Territory Campaign</button></form><p>Move figures, claim territories, scavenge and craft. <a href="/territory-rules.pdf">Print the territory game</a>.</p>
+<form method="post" action="/tabletop/new"><!--CSRF--><button class="primary">Open legacy 12-round companion</button></form><p>12 rounds, printed cards, shared outbreak campaign. <a href="/tabletop-kit.pdf">Download the print-and-play kit</a>.</p></main>
   </body>
 </html>

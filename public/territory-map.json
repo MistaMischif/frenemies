@@ -1,0 +1,214 @@
+{
+  "territories": [
+    {
+      "id": "A1",
+      "name": "Ruined lookout",
+      "x": 0,
+      "y": 0,
+      "resource": "sensor",
+      "workshop": false,
+      "clinic": false,
+      "neighbors": [
+        "B1",
+        "A2"
+      ]
+    },
+    {
+      "id": "B1",
+      "name": "Zombie refuge",
+      "x": 1,
+      "y": 0,
+      "resource": "launcher",
+      "workshop": false,
+      "clinic": false,
+      "neighbors": [
+        "A1",
+        "C1",
+        "B2"
+      ]
+    },
+    {
+      "id": "C1",
+      "name": "Scrap workshop",
+      "x": 2,
+      "y": 0,
+      "resource": "bipod",
+      "workshop": true,
+      "clinic": false,
+      "neighbors": [
+        "B1",
+        "D1",
+        "C2"
+      ]
+    },
+    {
+      "id": "D1",
+      "name": "Graveyard",
+      "x": 3,
+      "y": 0,
+      "resource": "supply",
+      "workshop": false,
+      "clinic": false,
+      "neighbors": [
+        "C1",
+        "D2"
+      ]
+    },
+    {
+      "id": "A2",
+      "name": "Old woodland",
+      "x": 0,
+      "y": 1,
+      "resource": "bipod",
+      "workshop": false,
+      "clinic": false,
+      "neighbors": [
+        "B2",
+        "A1",
+        "A3"
+      ]
+    },
+    {
+      "id": "B2",
+      "name": "Community clinic",
+      "x": 1,
+      "y": 1,
+      "resource": "supply",
+      "workshop": false,
+      "clinic": true,
+      "neighbors": [
+        "A2",
+        "C2",
+        "B1",
+        "B3"
+      ]
+    },
+    {
+      "id": "C2",
+      "name": "Salvage yard",
+      "x": 2,
+      "y": 1,
+      "resource": "launcher",
+      "workshop": false,
+      "clinic": false,
+      "neighbors": [
+        "B2",
+        "D2",
+        "C1",
+        "C3"
+      ]
+    },
+    {
+      "id": "D2",
+      "name": "Watchtower",
+      "x": 3,
+      "y": 1,
+      "resource": "sensor",
+      "workshop": false,
+      "clinic": false,
+      "neighbors": [
+        "C2",
+        "D1",
+        "D3"
+      ]
+    },
+    {
+      "id": "A3",
+      "name": "Human refuge",
+      "x": 0,
+      "y": 2,
+      "resource": "supply",
+      "workshop": false,
+      "clinic": false,
+      "neighbors": [
+        "B3",
+        "A2"
+      ]
+    },
+    {
+      "id": "B3",
+      "name": "Field workshop",
+      "x": 1,
+      "y": 2,
+      "resource": "launcher",
+      "workshop": true,
+      "clinic": false,
+      "neighbors": [
+        "A3",
+        "C3",
+        "B2"
+      ]
+    },
+    {
+      "id": "C3",
+      "name": "Birch grove",
+      "x": 2,
+      "y": 2,
+      "resource": "sensor",
+      "workshop": false,
+      "clinic": false,
+      "neighbors": [
+        "B3",
+        "D3",
+        "C2"
+      ]
+    },
+    {
+      "id": "D3",
+      "name": "Rocky pass",
+      "x": 3,
+      "y": 2,
+      "resource": "bipod",
+      "workshop": false,
+      "clinic": false,
+      "neighbors": [
+        "C3",
+        "D2"
+      ]
+    }
+  ],
+  "figures": [
+    {
+      "id": "H1",
+      "team": "red",
+      "art": "char01V01",
+      "home": "A3",
+      "toyId": "c2g-figure-h1"
+    },
+    {
+      "id": "H2",
+      "team": "red",
+      "art": "char02V01",
+      "home": "B3",
+      "toyId": "c2g-figure-h2"
+    },
+    {
+      "id": "H3",
+      "team": "red",
+      "art": "char03V01",
+      "home": "C3",
+      "toyId": "c2g-figure-h3"
+    },
+    {
+      "id": "Z1",
+      "team": "blue",
+      "art": "zmb01V01",
+      "home": "B1",
+      "toyId": "c2g-figure-z1"
+    },
+    {
+      "id": "Z2",
+      "team": "blue",
+      "art": "zmb01V02",
+      "home": "C1",
+      "toyId": "c2g-figure-z2"
+    },
+    {
+      "id": "Z3",
+      "team": "blue",
+      "art": "zmb01V03",
+      "home": "D1",
+      "toyId": "c2g-figure-z3"
+    }
+  ]
+}
