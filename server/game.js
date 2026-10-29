@@ -38,6 +38,8 @@ export class Game {
     this.fxSequence = 0;
     this.effects = [];
     this.barrageReady = { red: 0, blue: 0 };
+    this.participation = new Map();
+    this.recap = null;
   }
   effect(kind, team, extra = {}) {
     this.effects.push({ id: ++this.fxSequence, kind, team, ...extra });
@@ -95,6 +97,8 @@ export class Game {
     this.nextTick = 2000;
     this.teams = { red: team(), blue: team() };
     this.active.clear();
+    this.participation.clear();
+    this.recap = null;
     this.votes.clear();
     this.status = "running";
     this.cleared = false;
@@ -141,6 +145,16 @@ export class Game {
       this.blockedCommands.has(text)
     )
       return false;
+    if (text === "!join") {
+      if (this.players.has(name)) return false;
+      const character = this.campaign?.data.characters[this.campaign.names.get(name)];
+      const roster = { red: 0, blue: 0 };
+      for (const side of this.players.values()) roster[side]++;
+      const side = character?.infected ? "blue" : character?.faction || (roster.red <= roster.blue ? "red" : "blue");
+      this.players.set(name, side);
+      this.effect("join", side, { name });
+      return true;
+    }
     const raw = text.slice(1);
     const cmd = raw === "human" ? "red" : raw === "zombie" ? "blue" : raw;
     if (!text.startsWith("!")) return false;
@@ -151,6 +165,7 @@ export class Game {
       )
         return false;
       this.players.set(name, cmd);
+      this.effect("join", cmd, { name });
       return true;
     }
     if (
@@ -163,6 +178,7 @@ export class Game {
       return false;
     this.active.add(name);
     this.votes.set(name, cmd);
+    this.participation.set(name, (this.participation.get(name) || 0) + 1);
     return true;
   }
   totals() {
@@ -239,6 +255,7 @@ export class Game {
     if (TEAMS.some((t) => this.teams[t].line === 0)) this.finish();
   }
   finish() {
+    if (this.status === "finished") return;
     const a = this.teams.red.line,
       b = this.teams.blue.line,
       n = this.counts();
@@ -255,6 +272,12 @@ export class Game {
               : "blue"
             : "draw";
     this.status = "finished";
+    const leaders = [...this.participation].sort((a,b) => b[1]-a[1] || a[0].localeCompare(b[0])).slice(0,3);
+    this.recap = { round: this.round, winner: this.winner, participants: this.active.size,
+      acceptedVotes: [...this.participation.values()].reduce((a,b)=>a+b,0),
+      duration: Math.round(this.elapsed/1000),
+      contributors: leaders.map(([name,votes])=>({name,votes})),
+      line: {red:a,blue:b} };
     this.effect("victory", this.winner);
     this.votes.clear();
     this.tabletop?.finish();
@@ -315,6 +338,7 @@ export class Game {
   }
   snapshot() {
     return {
+      recap: this.recap,
       territory: this.territory?.snapshot(),
       tabletop: this.tabletop?.snapshot(),
       environment: this.environment || { id: "default", name: "Neon battlefield", url: null },

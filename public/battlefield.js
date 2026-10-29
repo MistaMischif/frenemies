@@ -179,7 +179,7 @@
           defend: "SHIELD",
           surge: "SURGE",
           supply: "+ SUPPLY",
-        }[e.kind] || e.kind.toUpperCase();
+        }[e.kind] || (e.kind === "join" ? e.name + " JOINED" : e.kind.toUpperCase());
       ctx.globalAlpha = Math.max(0, 1 - age / 1.5);
       text(label, x, y - 25 - (reduced.matches ? 0 : age * 15), 20, c);
       ctx.globalAlpha = 1;

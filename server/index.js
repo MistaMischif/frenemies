@@ -136,7 +136,7 @@ function makeRoom(id, login, simulated = false) {
     if (text === "!human" && character?.infected) {
       room.game.say(`${name} is infected: use !zombie or !rescue between battles (3 supplies).`); return;
     }
-    if (room.game.chat(name, text) && ["!human", "!zombie"].includes(text))
+    if (room.game.chat(name, text) && ["!human", "!zombie", "!join"].includes(text))
       room.campaign.join(userId, name, room.game.players.get(name));
   };
   let eventQueue = Promise.resolve();
@@ -344,11 +344,36 @@ app.get("/api/control", owner, (req, res) =>
     state: req.room.game.snapshot(),
   }),
 );
-app.post("/api/control", owner, (req, res) => {
+app.post("/api/control", owner, async (req, res) => {
   if (!req.session.csrf || req.get("x-csrf-token") !== req.session.csrf)
     return res.sendStatus(403);
   const g = req.room.game;
   const action = req.body.action;
+  if (action === "return-twitch") {
+    try {
+      await req.room.enqueue(async () => {
+        const previous = {status:g.territory.s.status, revision:g.territory.s.revision, votes:new Map(g.territory.votes)};
+        try {
+        if (g.territory.s.status === "active") {
+          g.territory.s.status = "suspended";
+          g.territory.s.revision++;
+          g.territory.votes.clear();
+        }
+        if (g.tabletop.enabled) {
+          g.status = "lobby";
+          g.tabletop.configure(false);
+          g.votes.clear();
+          g.active.clear();
+        }
+        if (!g.simulated) { persisted[req.room.id].campaign = req.room.campaign.data; await save(req.room.id); }
+        } catch (error) {
+          g.territory.s.status=previous.status;g.territory.s.revision=previous.revision;g.territory.votes=previous.votes;
+          throw error;
+        }
+      });
+      broadcast(req.room); return res.json(g.snapshot());
+    } catch { return res.status(500).json({error:"Could not save the mode change. Please retry."}); }
+  }
   if(g.territory.s.status==="active")return res.status(409).json({error:"Finish the territory expedition before using classic battle controls."});
   if ((action === "start" || action === "next") && req.room.environmentSaving) return res.status(409).json({error:"Wait for the environment to finish saving."});
   if (action === "start" || action === "next") {

@@ -21,5 +21,12 @@ test('territory HTTP persists map, isolates bridge permission and validates obse
   const bridge=await(await fetch(data.bridge)).json();assert.equal(bridge.protocol,'c2g.territory.v1');assert.equal(bridge.definition.pieces.find(p=>p.id==='c2g-figure-h1').y,1);assert.equal(JSON.stringify(bridge).includes(pair.key),false);assert.equal('receipts' in bridge.state,false);
   const saved=JSON.parse(await readFile(path.join(dir,'scores.json'),'utf8'))['local-tabletop'];assert.equal(saved.campaign.territory.pieces.H1.location,'A2');assert.equal(saved.bridgeHash.length,64);assert.notEqual(saved.bridgeHash,pair.key);
   await post('/api/territory/bridge-key',{});assert.equal((await observe({pieceId:'c2g-figure-h1',target:'A1',revision:2})).status,401);
+
+  const seasonBefore=JSON.stringify((await(await fetch(base+'/api/control',{headers:{cookie}})).json()).state.season);
+  assert.equal((await post('/api/control',{action:'return-twitch'})).status,200);
+  const restored=await(await fetch(base+'/api/control',{headers:{cookie}})).json();
+  assert.equal(restored.state.territory.status,'suspended');assert.equal(restored.state.territory.pieces.H1.location,'A2');assert.equal(JSON.stringify(restored.state.season),seasonBefore);
+  assert.equal((await post('/api/control',{action:'start'})).status,200);
+  assert.equal((await(await fetch(base+'/api/control',{headers:{cookie}})).json()).state.status,'running');
  }finally{child.kill();await new Promise(resolve=>child.once('exit',resolve));await rm(dir,{recursive:true,force:true})}
 });

@@ -1,4 +1,4 @@
-let csrf;
+let csrf, overlayBase = "";
 const el = (id) => document.getElementById(id);
 async function update() {
   try {
@@ -21,10 +21,12 @@ async function update() {
     }
     el("mode").textContent = d.state.simulated ? "SIMULATED CHAT" : "";
     el("channel").textContent = `Channel: ${d.channel}`;
-    el("overlay").value = d.overlay;
-    el("preview").href = d.overlay;
-    if (el("battle-preview").getAttribute("src") !== d.overlay)
-      el("battle-preview").src = d.overlay;
+    overlayBase = d.overlay;
+    applyLayout();
+    el("legacy-mode").hidden = !(d.state.territory?.status === "active" || d.state.tabletop?.enabled);
+    const recap = d.state.recap;
+    el("battle-recap").textContent = recap ? `Battle ${recap.round}: ${recap.winner === "draw" ? "Draw" : recap.winner === "red" ? "Humans win" : "Zombies win"} · ${recap.participants} participants · ${recap.acceptedVotes} accepted chat votes · ${recap.duration}s. Most accepted votes: ${recap.contributors.map(c=>c.name+" ("+c.votes+")").join(", ") || "none"}.` : "Finish a battle to see participation and results.";
+    el("copy-recap").disabled = !recap;
     el("battle-events").replaceChildren(...(d.state.events || []).map((event) => {
       const item = document.createElement("li");
       item.textContent = event;
@@ -157,3 +159,12 @@ el("environment-upload").addEventListener("submit", async event => {
   } catch(error) {el("environment-status").textContent=error.message;}
   finally {bitmap?.close();button.disabled=false;}
 });
+
+function applyLayout() {
+  if (!overlayBase) return;
+  const url = overlayBase + (el("overlay-layout").value === "compact" ? "?layout=compact" : "");
+  el("overlay").value = url; el("preview").href = url;
+  if (el("battle-preview").getAttribute("src") !== url) el("battle-preview").src = url;
+}
+el("overlay-layout").addEventListener("change", applyLayout);
+el("copy-recap").addEventListener("click", e=>copyText(el("battle-recap").textContent,e.currentTarget));

@@ -8,13 +8,13 @@
     <script src="/environment-scenes.js" defer></script>
     <script src="/control.js" defer></script>
   </head>
-  <body><p class="territory-link"><a href="/territory">Play the territory map: movement, scavenging, crafting and combat</a></p>
+  <body>
     <main class="shell">
       <div class="row">
         <a class="brand" href="/">FRENEMIES /</a
         ><span class="label" id="mode"></span>
       </div>
-      <p><a class="button" href="/tabletop">Open tabletop companion</a> <a href="/tabletop-kit.pdf">Print the physical game</a></p>
+      <section id="legacy-mode" class="panel" hidden><p>An earlier prototype is active. Return to Twitch battles to continue; its map is retained without awarding a win.</p><button data-action="return-twitch">Return to Twitch battles</button></section>
       <h1 style="font-size: 54px; letter-spacing: -2px">Your battlefield.</h1>
       <p id="channel">Loading your channel…</p>
       <div class="panel">
@@ -57,12 +57,12 @@
       <section class="panel">
         <div class="row"><h2>Live battlefield</h2><span class="mini">The same view your audience sees</span></div>
         <div id="preview-stage" class="preview-stage"><iframe id="battle-preview" title="Live animated battle preview"></iframe></div>
-        <h3>Latest actions</h3>
+        <h3>Battle recap</h3><p id="battle-recap">Finish a battle to see participation and results.</p><button id="copy-recap">Copy battle recap</button><h3>Latest actions</h3>
         <ol id="battle-events" class="battle-events"></ol>
       </section>
       <div class="panel">
         <h2>Bring it to your stream.</h2>
-        <label for="overlay"
+        <label for="overlay-layout">Broadcast layout</label><select id="overlay-layout"><option value="full">Full arena � community segment</option><option value="compact">Compact strip � alongside your content</option></select><br><label for="overlay"
           >OBS Browser Source URL · 1920 × 1080 (or 1280 × 720)</label
         ><input id="overlay" readonly /><a
           id="preview"
@@ -87,7 +87,7 @@
       </section>
       <section class="panel">
         <h2>Get your chat playing.</h2>
-        <p id="chat-instructions">Pick a side: !human or !zombie. Then vote with !attack, !defend, !heal or !surge. Your team's winning vote acts every 2 seconds. Playing is free!</p>
+        <p id="chat-instructions">Type !join to join automatically, or choose !human / !zombie. Then vote with !attack, !defend, !heal or !surge. Your team's winning vote acts every 2 seconds. Playing is free!</p>
         <button id="copy-instructions">Copy viewer instructions</button>
         <p class="mini">Paste into Twitch chat or your stream description. Viewers need no download or separate game account.</p>
       </section>

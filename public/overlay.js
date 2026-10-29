@@ -1,5 +1,6 @@
 const el = (id) => document.getElementById(id);
 let socket;
+document.body.classList.toggle("compact", new URLSearchParams(location.search).get("layout") === "compact");
 function render(s) {
   window.dispatchEvent(new CustomEvent("battle-state", { detail: s }));
   document.body.classList.toggle("killed", s.cleared);
@@ -35,7 +36,7 @@ function render(s) {
           .join(" / ")
       : "VOTE TOTALS HIDDEN";
   }
-  el("event").textContent = s.last;
+  el("event").textContent = s.recap ? `${s.last} / ${s.recap.participants} players / ${s.recap.acceptedVotes} accepted votes` : s.last;
   const campaign = s.campaign;
   el("campaign-strip").textContent = campaign
     ? `CHAPTER ${campaign.chapter} · REFUGE ${campaign.settlement}/100 · SUPPLIES ${campaign.supplies} · ${campaign.objective?.title || campaign.chronicle[0]?.text || "Your community's story starts here"}` : "";

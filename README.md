@@ -1,19 +1,21 @@
 # Frenemies
 
-Frenemies: Twitch chat splits into two teams and wages live battles — and when one side dwindles, the other side gains the advantage, just like in a real war.
-
-Red and Blue are the only teams. The streamer hosts; viewers play through Twitch chat. Original CSS arena, no external art or music.
+Frenemies turns Twitch chat into Human and Zombie factions in an animated C2G outbreak. Free viewers join, vote and build a persistent channel story. The streamer runs short battles alongside their main content.
 
 ## Current delivery status
 
-Deployed October 26, 2026: **https://frenemies-u3n4.onrender.com**. Public source: **https://github.com/MistaMischif/frenemies**. Render Free + Neon Free are configured. Twenty-one automated tests pass. Twitch sign-in and real chat battles with two builder-controlled accounts have been verified, including attacks, surge, control effects and a Blue win saved to the season scoreboard. This is not evidence of an independent audience or live OBS broadcast. Genuine Twitch event effects and the final video remain pending. See `submission/LIVE-TEST.md` for observed evidence and remaining checks; simulated screenshots remain labelled.
+Version 1.6.0 restores the Twitch-first entry point, adds !join, a compact OBS layout, and accurate battle recaps. Board-game prototypes are removed from the main navigation; saved prototype data is retained. Existing active prototypes have an explicit Return to Twitch battles control that does not award a win.
+
+Established hosting: https://frenemies-u3n4.onrender.com. Source: https://github.com/MistaMischif/frenemies. Current release verification is in releases/1.6.0/README.md. Bits availability still depends on Extension onboarding and channel eligibility; do not treat the simulated Barrage as a live transaction. No large-streamer adoption or audience-retention uplift has been established.
+
+See docs/TWITCH-PRODUCT-DIRECTION.md for the research, prioritized changes and pilot criteria. Planned features are distinguished from implemented ones.
 
 ## Streamer setup — target under five minutes on a configured server
 
 1. Open the deployed home page and choose **Connect your Twitch channel**.
 2. Sign into the broadcaster account and authorize the read-only scopes. The selected channel is the broadcaster's own channel; there is no access to other channels.
 3. Copy the overlay URL from controls. In OBS add a Browser Source, paste the URL, and set 1920×1080 or 1280×720.
-4. Keep `/control` open in the signed-in browser. Tell chat to type `!human` or `!zombie`, then `!attack`, `!defend`, `!heal` or `!surge`.
+4. Keep `/control` open in the signed-in browser. Tell chat to type `!join` (automatic faction), `!human` or `!zombie`, then `!attack`, `!defend`, `!heal` or `!surge`.
 5. Click **Start battle**. Use Pause/Resume, Next battle, battlefield events, or the red kill-switch. Kill pauses voting and makes the overlay transparent. Resume restores it.
 
 This five-minute flow assumes the operator has already deployed and registered the Twitch application. Initial developer account/hosting setup takes longer. Setup timing has not yet been measured with a stranger.
@@ -23,6 +25,14 @@ This five-minute flow assumes the operator has already deployed and registered t
 Use Node 22 or later. Run `npm ci`, then `npm test`, then `npm start`. Open `http://localhost:3000`. Choose **Try simulated chat** to run without Twitch credentials. The demo uses 12 Red and 6 Blue simulated participants. It runs the same battle engine and does not save season wins. No Twitch messages are sent by the demo.
 
 To configure Twitch, copy `.env.example` to `.env` and fill values locally. Never commit it. Production secrets belong in the host's environment configuration. OAuth access/refresh tokens exist only in process memory, never in files or the client.
+
+## Broadcast and participation
+
+Choose Full arena or Compact strip in controls before copying the OBS URL. Compact uses `?layout=compact` on the same read-only overlay; no extra viewer permissions. The preview uses the selected layout. Overlay controls retain pause and kill-switch behavior.
+
+`!join` restores a known character's faction, places infected characters on Zombies, and assigns new characters to the smaller joined roster (Humans on ties). It does not switch an already-joined player or add an active headcount until participation. Explicit team commands remain available between battles.
+
+After a battle, controls show unique active participants, accepted command votes, duration and up to three viewers with most accepted votes. These are participation counts, not skill awards or proof of retention. Duplicate commands are excluded. Recaps are session-only and clear for the next battle.
 
 ## Rules and explicit interpretations
 
