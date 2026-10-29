@@ -53,6 +53,7 @@ test("shared war HTTP authorization, two demo communities, public isolation and 
         },
         body: new URLSearchParams({ csrf }),
       });
+      assert.equal(r.headers.get("location"), "/war?demo=1");
       cookie = r.headers.get("set-cookie")?.split(";")[0] || cookie;
       let d = await (
         await fetch(base + "/api/war", { headers: { cookie } })
@@ -134,6 +135,25 @@ test("shared war HTTP authorization, two demo communities, public isolation and 
         .integrity,
       75,
     );
+    const started = await (await post(a, { action: "demo-start" })).json();
+    assert.equal(started.enlisted, true);
+    assert.equal(started.cleared, false);
+    assert.equal(started.demoSquad, true);
+    const convoyId = started.operation.id;
+    await post(a, { action: "demo-start" });
+    let moving;
+    for (let i = 0; i < 20; i++) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      moving = await (await fetch(base + "/api/war", { headers: { cookie: a.cookie } })).json();
+      if (moving.operation.progress > 0) break;
+    }
+    assert.equal(moving.operation.id, convoyId);
+    assert.equal(moving.operation.route, "detour");
+    assert.ok(moving.operation.progress > 0, "demo must advance without extra clicks");
+    for (const role of ["fortify", "scout", "assault", "escort"]) {
+      assert.ok(moving.visualRoles[role] > 0);
+      assert.ok(moving.operation.visual.actions[role] > 0);
+    }
   } finally {
     child.kill();
     await new Promise((resolve) => child.once("exit", resolve));

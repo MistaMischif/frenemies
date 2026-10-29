@@ -80,7 +80,15 @@ export function installWar({
     const r = req.room,
       w = select(r);
     try {
-      if (req.body.action === "demo-squad" && w.simulated) {
+      if (req.body.action === "demo-start" && w.simulated) {
+        w.enlist(r.id, r.login + "-" + r.id.slice(-4));
+        r.game.cleared = false;
+        r.show.auto = false;
+        if (r.game.status === "running") r.game.status = "paused";
+        if (w.s.operation?.status !== "active") w.command(r.id, "launch");
+        r.simWarSquad = true;
+        r.simWarAutoRoute = true;
+      } else if (req.body.action === "demo-squad" && w.simulated) {
         r.simWarSquad = !r.simWarSquad;
       } else if (req.body.action === "join") {
         w.enlist(
@@ -130,6 +138,12 @@ export function installWar({
             ),
         );
       }
+    const commander = rooms.get(demo.s.operation?.commander);
+    if (commander?.simWarAutoRoute && commander.simWarSquad &&
+        demo.s.operation?.status === "active" && !demo.s.operation.route &&
+        demo.s.operation.intel >= 3) {
+      demo.command(commander.id, "detour");
+    }
     for (const w of [live, demo]) {
       w.tick();
       flush(w).catch(() => {});

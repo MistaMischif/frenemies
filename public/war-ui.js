@@ -33,8 +33,9 @@ async function load() {
       key ? "/api/war/view/" + encodeURIComponent(key) : "/api/war",
       { cache: "no-store" },
     );
-    if (!r.ok) throw Error("Sign in or start a demo from /control.");
+    if (!r.ok) { $("sign-in").hidden = !!key; throw Error("Start a demo or connect Twitch using the link above the battlefield."); }
     state = await r.json();
+    $("sign-in").hidden = true;
     reactions.accept(state, performance.now());
     csrf = state.csrf || csrf;
     render();
@@ -87,6 +88,9 @@ function render() {
   $("overlay").textContent = location.origin + (s.overlay || "/war/" + key);
   $("overlay").href = s.overlay || "#";
   $("demo").hidden = !s.simulated;
+  $("demo-launch").hidden = !s.simulated || !!key;
+  $("start-demo").disabled = busy || (s.demoSquad && o?.status === "active");
+  $("start-demo").textContent = s.demoSquad && o?.status === "active" ? "Demo running · all four roles active" : "Start moving battlefield demo";
   $("squad").textContent = s.demoSquad
     ? "Stop simulated squad"
     : "Run simulated squad";
@@ -254,7 +258,7 @@ function draw(t) {
     i < Math.min(9, 2 + Math.ceil(Math.sqrt(s?.visualRoles?.escort || 0)));
     i++
   ) {
-    const im = image(roster[i]?.asset || fallback[i]);
+    const im = image(roster[i]?.asset || fallback[i % fallback.length]);
     if (!im.complete || !im.naturalWidth) continue;
     const height = 100,
       width = (height * im.naturalWidth) / im.naturalHeight,
@@ -303,7 +307,10 @@ function draw(t) {
   reactions.draw(ctx, s, t, x, reduced.matches);
   requestAnimationFrame(draw);
 }
-load();
+load().then(() => {
+  if (state?.simulated && new URLSearchParams(location.search).has("demo")) send("demo-start");
+});
+$("start-demo").onclick = () => send("demo-start");
 setInterval(load, 2000);
 requestAnimationFrame(draw);
 

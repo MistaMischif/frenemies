@@ -484,7 +484,7 @@ app.post("/demo", (req, res) => {
     room.chat("demo-human-" + i, "sim_red_" + i, "!human");
   for (let i = 0; i < 6; i++)
     room.chat("demo-zombie-" + i, "sim_blue_" + i, "!zombie");
-  res.redirect(303, "/control");
+  res.redirect(303, "/war?demo=1");
 });
 const owner = (req, res, next) => {
   req.room = rooms.get(req.session.owner);
