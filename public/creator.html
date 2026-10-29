@@ -1,7 +1,353 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Frenemies Creator Studio</title><link rel="stylesheet" href="/style.css"><script src="/creator.js" defer></script></head><body><main class="shell"><a href="/control">Back to battle controls</a><h1>Make it yours.</h1><p id="mode"></p><p id="notice" role="status">Loading channel...</p>
-<section class="panel"><h2>Your channel experience</h2><form id="settings"><label>Experience title <input name="title" maxlength="60" required></label><label>Currency name <input name="currency" maxlength="20" required></label><label>Human-side label <input name="humanName" maxlength="24" required></label><label>Zombie-side label <input name="zombieName" maxlength="24" required></label><button>Save names</button></form><a id="shop-link" class="button">View public shop</a><p>Share the shop link with chat. Players redeem and equip through their own Twitch identity in chat. Faction labels are customizable; !human / !zombie remain stable chat commands. Currency is earned only, channel-specific, and has no cash value. No Bits exchange or payouts.</p></section>
-<section class="panel"><h2>Character skins</h2><p>Upload original or licensed PNG art. Static full-character skins, transparent background recommended. The picker fits art to 512 pixels, preserving its proportions. Items start as drafts. Published items can be retired; existing owners keep them.</p><form id="skin"><label>Name <input name="name" maxlength="40" required></label><label>Faction <select name="team"><option value="red">Human side</option><option value="blue">Zombie side</option></select></label><label>Price <input name="price" type="number" min="0" max="500" value="30" required></label><label>PNG <input name="image" type="file" accept="image/png" required></label><button>Create draft skin</button></form><div id="items" class="steps"></div></section>
-<section class="panel"><h2>Missions and completion stories</h2><p>Define a mission using supported objectives. Each target counts eligible battles, not repeated messages. A published mission pays once per player. Objectives and rewards are immutable; retiring and republishing never resets completion.</p><form id="mission"><label>Mission title <input name="title" maxlength="60" required></label><label>Objective <select name="objective"><option value="play">Complete battles</option><option value="win">Win battles</option><option value="attack">Vote Attack in battles</option><option value="defend">Vote Defend in battles</option><option value="heal">Vote Heal in battles</option><option value="surge">Vote Surge in battles</option></select></label><label>Battle target <input name="target" type="number" min="1" max="50" value="3" required></label><label>Currency reward <input name="reward" type="number" min="0" max="50" value="20" required></label><label>Completion story <input name="story" maxlength="240" placeholder="The convoy reaches your settlement. A new alliance begins." required></label><button>Create draft mission</button></form><div id="missions"></div></section>
-<section class="panel"><h2>Economy rules</h2><p>10 currency per eligible battle, +5 for a victory, +20 for the first eligible battle each UTC day. Eligibility: at least two accepted command votes, a battle lasting at least ten seconds, and participants on both teams. The first ten eligible battles per UTC day earn currency and mission progress. Joining, paid effects and repeated commands do not generate currency. No missed-day penalty.</p></section>
-<section class="panel" id="demo-box" hidden><h2>Simulated player test</h2><p>Demo only. Join a named character, start a battle in controls, then return here to redeem and equip. Demo characters vote automatically and rewards are temporary.</p><form id="demo"><label>Username <input name="name" pattern="[a-z0-9_]{1,25}" value="test_player" required></label><label>Command <input name="message" maxlength="120" value="!join" required></label><button>Send simulated command</button></form><p id="demo-result"></p></section>
-<section class="panel"><h2>Participation and retention</h2><p>Measures eligible game players, not everyone watching. D1/D7 mean playing again on the exact UTC calendar day after the first eligible battle. Unmatured cohorts are excluded. Simulation is never mixed with a live channel.</p><p id="retention"></p><div id="days"></div><button id="export">Download aggregate analytics JSON</button><p class="mini">Rolling 90-day daily history; cohort eligibility restricted to the last 80 days. Event counts currently cover supported raid, Hype-begin and subscription/gift campaign events. Connected-chat hours measure observation time, not verified live broadcast hours. No individual watch-time claims.</p></section></main></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Frenemies Creator Studio</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/creator.js" defer></script>
+  </head>
+  <body>
+    <main class="shell">
+      <a href="/control">Back to battle controls</a>
+      <h1>Your show. Your world.</h1>
+      <p class="lead">
+        Create the reason to play. Measure the reason to return.
+      </p>
+      <nav class="row">
+        <a href="#broadcast">Broadcast</a><a href="#world">Identity</a
+        ><a href="#episodes-panel">Episodes</a><a href="#skins-panel">Rewards</a
+        ><a href="#analytics-panel">Results</a>
+      </nav>
+      <p id="mode"></p>
+      <p id="notice" role="status">Loading channel...</p>
+      <section class="panel" id="broadcast">
+        <h2>Run a broadcast sample</h2>
+        <p>
+          Mark a complete stream or comparable segment. Game samples track
+          participation and return visits. Control samples run without battles.
+          Use the same comparison key for matched times, duration and category;
+          differences are observational, not proof of causation.
+        </p>
+        <p id="session-state"></p>
+        <form id="session-start">
+          <label
+            >Sample label
+            <input
+              name="label"
+              maxlength="60"
+              placeholder="Friday community night"
+              required /></label
+          ><label
+            >Type
+            <select name="kind">
+              <option value="game">Frenemies enabled</option>
+              <option value="control">Control — no Frenemies</option>
+            </select></label
+          ><label
+            >Comparison key
+            <input
+              name="pair"
+              maxlength="40"
+              placeholder="friday-october" /></label
+          ><button>Start sample</button>
+        </form>
+        <form id="session-end" hidden>
+          <p>
+            Optional: enter net creator receipts after platform fees, direct
+            costs and operator effort in one consistent currency. Leave unknown
+            amounts blank; zero means a measured zero. Ending a sample stops
+            automatic scheduling; finish any current battle first for complete
+            results.
+          </p>
+          <label
+            >Net creator receipts
+            <input
+              name="receipts"
+              type="number"
+              min="0"
+              max="1000000"
+              step="0.01" /></label
+          ><label
+            >Direct costs
+            <input
+              name="costs"
+              type="number"
+              min="0"
+              max="1000000"
+              step="0.01" /></label
+          ><label
+            >Operator minutes
+            <input
+              name="minutes"
+              type="number"
+              min="0"
+              max="1000000"
+              step="0.1" /></label
+          ><label
+            >Operator hourly cost
+            <input
+              name="hourlyRate"
+              type="number"
+              min="0"
+              max="1000000"
+              step="0.01" /></label
+          ><button>End sample and record results</button>
+        </form>
+      </section>
+      <section class="panel" id="episodes-panel">
+        <h2>Community episodes</h2>
+        <p>
+          Both factions contribute to a shared objective while competing in
+          battles. Each eligible player contributes at most once per battle.
+          Publish an opening, a success ending and a setback ending. The active
+          episode keeps its own revision when you edit the template. A
+          successful episode can unlock a published skin for everyone who
+          participated in an eligible battle during that episode. Episodes do
+          not mint currency.
+        </p>
+        <p id="active-episode"></p>
+        <button id="cancel-episode" hidden>End active episode</button>
+        <form id="episode">
+          <input name="id" type="hidden" /><label
+            >Title <input name="title" maxlength="60" required /></label
+          ><label
+            >Opening
+            <textarea name="intro" maxlength="240" required></textarea></label
+          ><label
+            >Shared objective
+            <select name="objective">
+              <option value="play">Participate</option>
+              <option value="attack">Attack</option>
+              <option value="defend">Defend</option>
+              <option value="heal">Heal</option>
+              <option value="surge">Surge</option>
+            </select></label
+          ><label
+            >Community contributions
+            <input
+              name="target"
+              type="number"
+              min="1"
+              max="10000"
+              value="20"
+              required /></label
+          ><label
+            >Battle deadline
+            <input
+              name="rounds"
+              type="number"
+              min="1"
+              max="20"
+              value="3"
+              required /></label
+          ><label
+            >Shared cosmetic unlock on success
+            <select name="unlock" id="episode-reward">
+              <option value="">Story outcome only</option>
+            </select></label
+          ><label
+            >Success ending
+            <textarea name="success" maxlength="240" required></textarea></label
+          ><label
+            >Setback ending
+            <textarea name="failure" maxlength="240" required></textarea></label
+          ><button>Save episode template</button
+          ><button type="button" id="new-episode">New template</button
+          ><button type="button" id="starter-episode">
+            Try a starter story
+          </button>
+        </form>
+        <div id="episodes" class="steps"></div>
+      </section>
+      <section class="panel" id="world">
+        <h2>Your channel experience</h2>
+        <form id="settings">
+          <label
+            >Experience title
+            <input name="title" maxlength="60" required /></label
+          ><label
+            >Currency name
+            <input name="currency" maxlength="20" required /></label
+          ><label
+            >Faction one label
+            <input name="humanName" maxlength="24" required /></label
+          ><label
+            >Faction two label
+            <input name="zombieName" maxlength="24" required /></label
+          ><label
+            >New-player faction one skin
+            <select name="redStarter" id="red-starter"></select></label
+          ><label
+            >New-player faction two skin
+            <select name="blueStarter" id="blue-starter"></select></label
+          ><label
+            ><input name="outbreak" type="checkbox" /> Enable C2G outbreak rules
+            (infection, clinic and settlement)</label
+          ><button>Save names</button>
+        </form>
+        <a id="shop-link" class="button">View public shop</a>
+        <p>
+          Share the shop link with chat. Players redeem and equip in the player
+          hub or through their own Twitch identity in chat. Select free custom
+          starter skins here to replace the example art for new players. Faction
+          labels are customizable; !human / !zombie remain stable chat commands.
+          Currency is earned only, channel-specific, and has no cash value. No
+          Bits exchange or payouts.
+        </p>
+      </section>
+      <section class="panel" id="skins-panel">
+        <h2>Character skins</h2>
+        <p>
+          Upload original or licensed PNG art. Static full-character skins,
+          transparent background recommended. The picker fits art to 512 pixels,
+          preserving its proportions. Items start as drafts. Publish, rename,
+          reprice or retire items; existing owners keep them. Up to 200 skins.
+          The built-in C2G library is an example pack; your uploaded art can
+          replace it.
+        </p>
+        <form id="skin">
+          <label>Name <input name="name" maxlength="40" required /></label
+          ><label
+            >Faction
+            <select name="team">
+              <option value="red">Human side</option>
+              <option value="blue">Zombie side</option>
+            </select></label
+          ><label
+            >Price
+            <input
+              name="price"
+              type="number"
+              min="0"
+              max="500"
+              value="30"
+              required /></label
+          ><label
+            >PNG
+            <input
+              name="image"
+              type="file"
+              accept="image/png"
+              required /></label
+          ><button>Create draft skin</button>
+        </form>
+        <div id="items" class="steps"></div>
+      </section>
+      <section class="panel" id="missions-panel">
+        <h2>Missions and completion stories</h2>
+        <p>
+          Define a mission using supported objectives. Each target counts
+          eligible battles, not repeated messages. A published mission pays once
+          per player. Edit draft rules before publishing. Published names and
+          stories remain editable; duplicate a mission to make a new edition
+          with new rules. Up to 12 live missions and 200 archived/draft
+          editions. Retiring and republishing never resets completion.
+        </p>
+        <form id="mission">
+          <label
+            >Mission title <input name="title" maxlength="60" required /></label
+          ><label
+            >Objective
+            <select name="objective">
+              <option value="play">Complete battles</option>
+              <option value="win">Win battles</option>
+              <option value="attack">Vote Attack in battles</option>
+              <option value="defend">Vote Defend in battles</option>
+              <option value="heal">Vote Heal in battles</option>
+              <option value="surge">Vote Surge in battles</option>
+            </select></label
+          ><label
+            >Battle target
+            <input
+              name="target"
+              type="number"
+              min="1"
+              max="50"
+              value="3"
+              required /></label
+          ><label
+            >Currency reward
+            <input
+              name="reward"
+              type="number"
+              min="0"
+              max="50"
+              value="20"
+              required /></label
+          ><label
+            >Completion story
+            <input
+              name="story"
+              maxlength="240"
+              placeholder="The convoy reaches your settlement. A new alliance begins."
+              required /></label
+          ><button>Create draft mission</button>
+        </form>
+        <div id="missions"></div>
+      </section>
+      <section class="panel" id="economy-panel">
+        <h2>Economy rules</h2>
+        <p>
+          10 currency per eligible battle, +5 for a victory, +20 for the first
+          eligible battle each UTC day. Eligibility: your choice resolves at
+          least twice (or two accepted votes) and both factions participate.
+          Your choice repeats every six seconds for this battle; choose again
+          next battle. The first ten eligible battles per UTC day earn base
+          currency; mission progress and one-time mission rewards continue
+          afterward. Showcase ranks cost 50 × the next rank (up to 10) and add
+          an on-stream cosmetic ring, never combat power. Joining, paid effects
+          and repeated commands do not generate currency. No missed-day penalty.
+        </p>
+      </section>
+      <section class="panel" id="demo-box" hidden>
+        <h2>Simulated player test</h2>
+        <p>
+          Demo only. Join a named character, start a battle in controls, then
+          return here to redeem and equip. Demo characters vote automatically
+          and rewards are temporary.
+        </p>
+        <form id="demo">
+          <label
+            >Username
+            <input
+              name="name"
+              pattern="[a-z0-9_]{1,25}"
+              value="test_player"
+              required /></label
+          ><label
+            >Command
+            <input
+              name="message"
+              maxlength="120"
+              value="!join"
+              required /></label
+          ><button>Send simulated command</button>
+        </form>
+        <p id="demo-result"></p>
+      </section>
+      <section class="panel" id="analytics-panel">
+        <h2>Participation and retention</h2>
+        <p>
+          Measures eligible game players, not everyone watching. D1/D7 mean
+          playing again on the exact UTC calendar day after the first eligible
+          battle. Unmatured cohorts are excluded. Simulation is never mixed with
+          a live channel.
+        </p>
+        <p id="broadcast-retention"></p>
+        <div id="broadcast-results"></div>
+        <p id="comparison"></p>
+        <p id="retention"></p>
+        <div id="days"></div>
+        <button id="export">Download aggregate analytics JSON</button>
+        <p class="mini">
+          Rolling 90-day daily history; cohort eligibility restricted to the
+          last 80 days. Event counts currently cover supported raid, Hype-begin
+          and subscription/gift campaign events. Connected-chat hours measure
+          observation time, not verified live broadcast hours. No individual
+          watch-time claims.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

@@ -14,13 +14,25 @@
         <a class="brand" href="/">FRENEMIES /</a
         ><span class="label" id="mode"></span>
       </div>
-      <section id="legacy-mode" class="panel" hidden><p>An earlier prototype is active. Return to Twitch battles to continue; its map is retained without awarding a win.</p><button data-action="return-twitch">Return to Twitch battles</button></section>
-      <p><a class="button primary" href="/creator">Creator studio, shop and analytics</a></p>
+      <section id="legacy-mode" class="panel" hidden>
+        <p>
+          An earlier prototype is active. Return to Twitch battles to continue;
+          its map is retained without awarding a win.
+        </p>
+        <button data-action="return-twitch">Return to Twitch battles</button>
+      </section>
+      <p>
+        <a class="button primary" href="/creator"
+          >Creator studio, shop and analytics</a
+        >
+      </p>
       <h1 style="font-size: 54px; letter-spacing: -2px">Your battlefield.</h1>
       <p id="channel">Loading your channel…</p>
       <div class="panel">
         <div class="row">
-          <button class="primary" data-action="start">Start battle</button
+          <button data-action="auto" id="auto-show">
+            Enable automatic battles</button
+          ><button class="primary" data-action="start">Start battle</button
           ><button data-action="pause">Pause / Resume</button
           ><button data-action="next">Next battle</button
           ><button class="danger" data-action="kill">
@@ -28,6 +40,12 @@
           </button>
         </div>
         <p id="state" aria-live="polite"></p>
+        <p id="show-state"></p>
+        <p class="mini">
+          Automatic mode leaves 30 seconds between battles, stops after two
+          empty battles, and turns off on pause, kill-switch or server restart.
+          Record a broadcast sample in Creator Studio to measure returns.
+        </p>
         <button id="demo-barrage" data-action="demo-barrage" hidden>
           Simulate Barrage · no Bits
         </button>
@@ -43,27 +61,76 @@
         <select id="environment-choice"></select>
         <button id="assign-environment">Assign to next battle</button>
         <p id="environment-current" class="mini"></p>
-        <canvas id="scene-preview" width="1200" height="260" aria-label="Layered environment preview" hidden></canvas>
-        <img id="environment-preview" alt="Selected environment preview" hidden />
+        <canvas
+          id="scene-preview"
+          width="1200"
+          height="260"
+          aria-label="Layered environment preview"
+          hidden
+        ></canvas>
+        <img
+          id="environment-preview"
+          alt="Selected environment preview"
+          hidden
+        />
         <form id="environment-upload">
           <label for="environment-name">New environment name</label>
-          <input id="environment-name" maxlength="50" placeholder="Hospital rooftop" required />
-          <label for="environment-file">Background artwork · PNG, JPEG or WebP</label>
-          <input id="environment-file" type="file" accept="image/png,image/jpeg,image/webp" required />
-          <button id="upload-environment" type="submit">Upload and assign to next battle</button>
+          <input
+            id="environment-name"
+            maxlength="50"
+            placeholder="Hospital rooftop"
+            required
+          />
+          <label for="environment-file"
+            >Background artwork · PNG, JPEG or WebP</label
+          >
+          <input
+            id="environment-file"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            required
+          />
+          <button id="upload-environment" type="submit">
+            Upload and assign to next battle
+          </button>
         </form>
-        <p class="mini">Wide images work best (about 5:1). Artwork fills the battlefield behind the characters and may be cropped. Up to 8 uploads; each is resized to at most 1600 × 900 and compressed. Live-channel libraries persist across restarts; demo uploads are temporary. Uploaded art is visible to anyone with your overlay link.</p>
+        <p class="mini">
+          Wide images work best (about 5:1). Artwork fills the battlefield
+          behind the characters and may be cropped. Up to 8 uploads; each is
+          resized to at most 1600 × 900 and compressed. Live-channel libraries
+          persist across restarts; demo uploads are temporary. Uploaded art is
+          visible to anyone with your overlay link.
+        </p>
         <p id="environment-status" role="status"></p>
       </section>
       <section class="panel">
-        <div class="row"><h2>Live battlefield</h2><span class="mini">The same view your audience sees</span></div>
-        <div id="preview-stage" class="preview-stage"><iframe id="battle-preview" title="Live animated battle preview"></iframe></div>
-        <h3>Battle recap</h3><p id="battle-recap">Finish a battle to see participation and results.</p><button id="copy-recap">Copy battle recap</button><h3>Latest actions</h3>
+        <div class="row">
+          <h2>Live battlefield</h2>
+          <span class="mini">The same view your audience sees</span>
+        </div>
+        <div id="preview-stage" class="preview-stage">
+          <iframe
+            id="battle-preview"
+            title="Live animated battle preview"
+          ></iframe>
+        </div>
+        <h3>Battle recap</h3>
+        <p id="battle-recap">
+          Finish a battle to see participation and results.
+        </p>
+        <button id="copy-recap">Copy battle recap</button>
+        <h3>Latest actions</h3>
         <ol id="battle-events" class="battle-events"></ol>
       </section>
       <div class="panel">
         <h2>Bring it to your stream.</h2>
-        <label for="overlay-layout">Broadcast layout</label><select id="overlay-layout"><option value="full">Full arena · community segment</option><option value="compact">Compact strip · alongside your content</option></select><br><label for="overlay"
+        <label for="overlay-layout">Broadcast layout</label
+        ><select id="overlay-layout">
+          <option value="full">Full arena · community segment</option>
+          <option value="compact">
+            Compact strip · alongside your content
+          </option></select
+        ><br /><label for="overlay"
           >OBS Browser Source URL · 1920 × 1080 (or 1280 × 720)</label
         ><input id="overlay" readonly /><a
           id="preview"
@@ -80,17 +147,37 @@
         </p>
       </div>
       <section class="panel">
-        <h2>The outbreak chronicle</h2>
+        <h2>Your living chronicle</h2>
         <p id="campaign-summary"></p>
-        <button id="demo-convoy" data-action="demo-convoy" hidden>Simulate raid convoy · no Twitch event</button>
+        <button id="demo-convoy" data-action="demo-convoy" hidden>
+          Simulate raid convoy · no Twitch event
+        </button>
         <ol id="chronicle" class="battle-events"></ol>
-        <p class="mini">!status shows your character on the overlay (15s cooldown). Humans infected by a lost chapter play as Zombies until they use !rescue between battles. Recovery costs 3 shared supplies. Each played chapter earns 3; a successful convoy earns 3 more. Absence never harms a character.</p>
+        <p class="mini" id="outbreak-help">
+          !status shows your character on the overlay (15s cooldown). Humans
+          infected by a lost chapter play as Zombies until they use !rescue
+          between battles. Recovery costs 3 shared supplies. Each played chapter
+          earns 3; a successful convoy earns 3 more. Absence never harms a
+          character.
+        </p>
       </section>
       <section class="panel">
-        <h2>Get your chat playing.</h2><p>!wallet / !inventory / !missions / !shop / !redeem item-id / !equip item-id</p>
-        <p id="chat-instructions">Type !join to join automatically, or choose !human / !zombie. Then vote with !attack, !defend, !heal or !surge. Your team's winning vote acts every 2 seconds. Playing is free!</p>
+        <h2>Get your chat playing.</h2>
+        <p>
+          !wallet / !inventory / !missions / !shop / !redeem item-id / !equip
+          item-id
+        </p>
+        <p id="chat-instructions">
+          Type !join to join automatically, or choose !human / !zombie. Then
+          vote with !attack, !defend, !heal or !surge. Your choice repeats every
+          6 seconds for this battle. Change it when the fight changes; choose
+          again next battle. Playing is free!
+        </p>
         <button id="copy-instructions">Copy viewer instructions</button>
-        <p class="mini">Paste into Twitch chat or your stream description. Viewers need no download or separate game account.</p>
+        <p class="mini">
+          Paste into Twitch chat or your stream description. Viewers need no
+          download or separate game account.
+        </p>
       </section>
       <div class="panel">
         <h2>Connection status</h2>

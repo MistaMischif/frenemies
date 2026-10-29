@@ -382,3 +382,22 @@ select { background: #080d17; color: #e6ebf8; border: 1px solid #414d67; padding
 
 #scene-preview { width:100%; height:auto; border-radius:8px; margin:12px 0; }
 #scene-preview[hidden], #environment-preview[hidden] { display:none; }
+
+/* Creator and player surfaces */
+textarea {display:block;width:100%;min-height:84px;background:#121b2a;color:#f5f6fa;border:1px solid #58617a;border-radius:8px;padding:12px;font:inherit;resize:vertical;}
+form label {display:block;margin:12px 0;font-size:14px;color:#c6d0e2;}
+form input,form select {max-width:100%;}
+nav {margin:24px 0 32px;}
+.reward-card {display:flex;flex-direction:column;align-items:flex-start;gap:8px;}
+.reward-card h2 {font-size:22px;margin:8px 0;}
+.reward-card img {align-self:center;}
+#episodes article button,#missions article button,#items article button {margin:5px 5px 5px 0;}
+#broadcast-results {display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;}
+@media(max-width:600px){.shell{padding:24px 16px}h1{letter-spacing:-2px}button,.button{padding:12px 16px}form input,form select{width:100%}}
+
+.player-notice{position:fixed;bottom:12px;right:20px;max-width:480px;padding:10px 16px;background:#101a29ed;border:1px solid #58617a;border-radius:8px;z-index:9;font-size:14px;}
+
+nav a{padding:12px 18px;border-radius:8px;text-decoration:none;background:#182235}nav a[aria-current="page"]{background:#d9fb7b;color:#11180a;font-weight:700}
+#episode,#settings,#session-start,#session-end{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 24px}#episode button,#settings button,#session-start button,#session-end button{align-self:end}#session-end p{grid-column:1/-1}
+input[type="checkbox"]{width:auto!important}#notice{min-height:28px;color:#d9fb7b}#mode{font-size:12px;letter-spacing:1px;color:#9ba9bd}
+@media(max-width:650px){#episode,#settings,#session-start,#session-end{grid-template-columns:1fr}nav{gap:8px}nav a{padding:10px 12px}}

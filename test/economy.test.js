@@ -9,9 +9,9 @@ test('eligible rewards are once per battle, once daily bonus, no duplicate redem
  g.status='finished';battle(g);e.finish(g,now);assert.equal(e.account('1').balance,20);
  g.status='finished';battle(g);e.finish(g,now+86400000);assert.equal(e.account('1').balance,55);assert.deepEqual(e.analytics(now+86400000).d1,{eligible:2,returned:2,rate:1});assert.equal(e.analytics(now).d7.rate,null);
 });
-test('no rewards for joins, paid-only participation, short battles or one-sided farming; ten reward battles per day',()=>{
+test('no rewards for joins, paid-only participation, single-window participation or one-sided farming; ten reward battles per day',()=>{
  const {e,g}=setup();g.start();g.active.add('alice');g.elapsed=12000;e.finish(g);assert.equal(e.account('1').balance,0);
- g.status='finished';battle(g);g.elapsed=9000;e.finish(g);assert.equal(e.account('1').balance,0);
+ g.status='finished';battle(g);g.participation.set('alice',1);g.participation.set('bob',1);g.resolvedActions.clear();g.elapsed=6000;e.finish(g);assert.equal(e.account('1').balance,0);
  g.status='finished';battle(g);g.active.delete('bob');e.finish(g);assert.equal(e.account('1').balance,0);
  for(let i=0;i<12;i++){g.status='finished';battle(g);e.finish(g,Date.parse('2026-10-29T10:00:00Z'));}assert.equal(e.account('1').balance,170);
 });

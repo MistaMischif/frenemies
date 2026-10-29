@@ -42,16 +42,22 @@ export class Game {
     this.participation = new Map();
     this.actionCounts = new Map();
     this.recap = null;
+    this.intents = new Map();
+    this.resolvedActions = new Map();
+  }
+  get cadence() {
+    return this.economy && !this.tabletop?.enabled ? 6000 : 2000;
   }
   effect(kind, team, extra = {}) {
     this.effects.push({ id: ++this.fxSequence, kind, team, ...extra });
     this.effects = this.effects.slice(-32);
   }
   canBarrage(name) {
-    if(this.economyBusy)return false;
+    if (this.economyBusy) return false;
     const t = this.players.get(name);
     return (
-      !this.tabletop?.enabled && this.territory?.s.status!=="active" &&
+      !this.tabletop?.enabled &&
+      this.territory?.s.status !== "active" &&
       this.status === "running" &&
       this.elapsed >= this.freezeUntil &&
       t &&
@@ -62,8 +68,9 @@ export class Game {
     );
   }
   barrageShot(name) {
-    if(this.economyBusy)return false;
-    if (this.tabletop?.enabled || this.territory?.s.status==="active") return false;
+    if (this.economyBusy) return false;
+    if (this.tabletop?.enabled || this.territory?.s.status === "active")
+      return false;
     const t = this.players.get(name);
     if (
       this.status !== "running" ||
@@ -85,8 +92,17 @@ export class Game {
     return true;
   }
   say(text) {
-    text = text.replace(/\bred\b/gi, "HUMANS").replace(/\bblue\b/gi, "ZOMBIES").replace(/(HUMANS|ZOMBIES) (attacks|defends|heals|surges)/g, (_, team, verb) => `${team} ${verb.slice(0, -1)}`);
-    if(this.economy?.d.factions)text=text.replace(/\bHUMANS\b/g,this.economy.d.factions.red).replace(/\bZOMBIES\b/g,this.economy.d.factions.blue);
+    text = text
+      .replace(/\bred\b/gi, "HUMANS")
+      .replace(/\bblue\b/gi, "ZOMBIES")
+      .replace(
+        /(HUMANS|ZOMBIES) (attacks|defends|heals|surges)/g,
+        (_, team, verb) => `${team} ${verb.slice(0, -1)}`,
+      );
+    if (this.economy?.d.factions)
+      text = text
+        .replace(/\bHUMANS\b/g, this.economy.d.factions.red)
+        .replace(/\bZOMBIES\b/g, this.economy.d.factions.blue);
     this.last = text;
     this.events.unshift(text);
     this.events = this.events.slice(0, 5);
@@ -94,14 +110,20 @@ export class Game {
   start() {
     if (this.status === "running" || this.status === "paused") return false;
     for (const [name] of this.players) {
-      const character = this.campaign?.data.characters[this.campaign.names.get(name)];
-      if (character?.infected) { this.players.set(name, "blue"); character.faction = "blue"; }
+      const character =
+        this.campaign?.data.characters[this.campaign.names.get(name)];
+      if (character?.infected && (!this.economy || this.economy.d.outbreak)) {
+        this.players.set(name, "blue");
+        character.faction = "blue";
+      }
     }
     this.round++;
     this.battleId = randomUUID();
     this.actionCounts.clear();
     this.elapsed = 0;
-    this.nextTick = 2000;
+    this.nextTick = this.cadence;
+    this.intents.clear();
+    this.resolvedActions.clear();
     this.teams = { red: team(), blue: team() };
     this.active.clear();
     this.participation.clear();
@@ -132,6 +154,8 @@ export class Game {
   kill() {
     if (this.status === "running") this.status = "paused";
     this.votes.clear();
+    this.intents.clear();
+    if (this.show) this.show.auto = false;
     this.cleared = true;
   }
   counts() {
@@ -154,10 +178,14 @@ export class Game {
       return false;
     if (text === "!join") {
       if (this.players.has(name)) return false;
-      const character = this.campaign?.data.characters[this.campaign.names.get(name)];
+      const character =
+        this.campaign?.data.characters[this.campaign.names.get(name)];
       const roster = { red: 0, blue: 0 };
       for (const side of this.players.values()) roster[side]++;
-      const side = character?.infected ? "blue" : character?.faction || (roster.red <= roster.blue ? "red" : "blue");
+      const side =
+        character?.infected && (!this.economy || this.economy.d.outbreak)
+          ? "blue"
+          : character?.faction || (roster.red <= roster.blue ? "red" : "blue");
       this.players.set(name, side);
       this.effect("join", side, { name });
       return true;
@@ -185,8 +213,11 @@ export class Game {
       return false;
     this.active.add(name);
     this.votes.set(name, cmd);
+    if (this.economy) this.intents.set(name, cmd);
     this.participation.set(name, (this.participation.get(name) || 0) + 1);
-    const actions=this.actionCounts.get(name)||{};actions[cmd]=(actions[cmd]||0)+1;this.actionCounts.set(name,actions);
+    const actions = this.actionCounts.get(name) || {};
+    actions[cmd] = (actions[cmd] || 0) + 1;
+    this.actionCounts.set(name, actions);
     return true;
   }
   totals() {
@@ -194,24 +225,27 @@ export class Game {
       red: { attack: 0, defend: 0, heal: 0, surge: 0 },
       blue: { attack: 0, defend: 0, heal: 0, surge: 0 },
     };
-    for (const [name, cmd] of this.votes) {
+    for (const [name, cmd] of this.economy ? this.intents : this.votes) {
       const t = this.players.get(name);
       totals[t][cmd] += this.teams[t].frenzyUntil > this.elapsed ? 2 : 1;
     }
     return totals;
   }
   advance(ms) {
-    if (this.tabletop?.enabled || this.territory?.s.status==="active") return;
+    if (this.tabletop?.enabled || this.territory?.s.status === "active") return;
     if (this.status !== "running") return;
     this.elapsed = Math.min(180000, this.elapsed + ms);
     if (this.elapsed >= this.nextTick) {
-      this.nextTick = Math.floor(this.elapsed / 2000 + 1) * 2000;
+      this.nextTick =
+        Math.floor(this.elapsed / this.cadence + 1) * this.cadence;
       if (this.elapsed >= this.freezeUntil) this.tick();
       else this.votes.clear();
     }
     if (this.status === "running" && this.elapsed >= 180000) this.finish();
   }
   tick() {
+    for (const name of this.intents.keys())
+      this.resolvedActions.set(name, (this.resolvedActions.get(name) || 0) + 1);
     const totals = this.totals(),
       counts = this.counts(),
       selected = {};
@@ -232,7 +266,9 @@ export class Game {
       }
       if (cmd === "heal") {
         this.effect("heal", t);
-        const gain = Math.min(15, 3 + Math.floor(counts[t] / 2));
+        const gain = this.economy
+          ? 5
+          : Math.min(15, 3 + Math.floor(counts[t] / 2));
         s.line = Math.min(100, s.line + gain);
         messages.push(`${t} heals +${gain}`);
       }
@@ -250,7 +286,11 @@ export class Game {
         s = this.teams[t],
         target = this.teams[other];
       damage[other] =
-        (this.tabletop?.enabled ? this.tabletop.damage(t, (5 + counts[t]) * (s.power ? 2 : 1)) : Math.min(25, (5 + counts[t]) * (s.power ? 2 : 1))) *
+        (this.tabletop?.enabled
+          ? this.tabletop.damage(t, (5 + counts[t]) * (s.power ? 2 : 1))
+          : this.economy
+            ? 8 * (s.power ? 2 : 1)
+            : Math.min(25, (5 + counts[t]) * (s.power ? 2 : 1))) *
         (target.shield ? 0.5 : 1);
       s.power = false;
       target.shield = false;
@@ -274,22 +314,32 @@ export class Game {
           ? a > b
             ? "red"
             : "blue"
-          : n.red !== n.blue
+          : !this.economy && n.red !== n.blue
             ? n.red > n.blue
               ? "red"
               : "blue"
             : "draw";
     this.status = "finished";
-    const leaders = [...this.participation].sort((a,b) => b[1]-a[1] || a[0].localeCompare(b[0])).slice(0,3);
-    this.recap = { round: this.round, winner: this.winner, participants: this.active.size,
-      acceptedVotes: [...this.participation.values()].reduce((a,b)=>a+b,0),
-      duration: Math.round(this.elapsed/1000),
-      contributors: leaders.map(([name,votes])=>({name,votes})),
-      line: {red:a,blue:b} };
+    const leaders = [...this.participation]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, 3);
+    this.recap = {
+      round: this.round,
+      winner: this.winner,
+      participants: this.active.size,
+      acceptedVotes: [...this.participation.values()].reduce(
+        (a, b) => a + b,
+        0,
+      ),
+      duration: Math.round(this.elapsed / 1000),
+      contributors: leaders.map(([name, votes]) => ({ name, votes })),
+      line: { red: a, blue: b },
+    };
     this.effect("victory", this.winner);
     this.votes.clear();
     this.tabletop?.finish();
     this.campaign?.finish(this);
+    this.show?.finished(this);
     if (this.winner !== "draw") {
       this.stream[this.winner]++;
       if (!this.simulated) {
@@ -337,8 +387,7 @@ export class Game {
     else if (kind === "hype") {
       if (this.tabletop?.enabled) this.tabletop.frenzy[t] = true;
       else s.frenzyUntil = this.elapsed + 60000;
-    }
-    else return false;
+    } else return false;
     this.say(
       `${kind.toUpperCase()} · ${name} reinforces ${t.toUpperCase()}${kind === "hype" ? (this.tabletop?.enabled ? " · FRENZY +3 next Attack" : " · FRENZY 60s") : ""}`,
     );
@@ -346,19 +395,39 @@ export class Game {
   }
   snapshot() {
     return {
-      creator: this.economy ? {title:this.economy.d.title,currency:this.economy.d.currency,factions:this.economy.d.factions} : null,
-      roster: this.economy?.roster(this,this.overlayKey),
+      creator: this.economy
+        ? {
+            title: this.economy.d.title,
+            currency: this.economy.d.currency,
+            factions: this.economy.d.factions,
+          }
+        : null,
+      roster: this.economy?.roster(this, this.overlayKey),
+      notice: this.notice?.until > Date.now() ? this.notice.text : null,
+      show: this.show?.snapshot(),
+      cadence: this.cadence,
+      choiceRemaining: Math.max(
+        0,
+        Math.ceil(((this.nextTick || this.cadence) - this.elapsed) / 1000),
+      ),
       recap: this.recap,
       territory: this.territory?.snapshot(),
       tabletop: this.tabletop?.snapshot(),
-      environment: this.environment || { id: "default", name: "Neon battlefield", url: null },
+      environment: this.environment || {
+        id: "default",
+        name: "Neon battlefield",
+        url: null,
+      },
       campaign: this.campaign?.snapshot(),
       status: this.status,
       round: this.round,
       remaining: Math.ceil((180000 - this.elapsed) / 1000),
       teams: this.teams,
       counts: this.counts(),
-      totals: this.tabletop?.enabled || this.elapsed < this.fogUntil ? null : this.totals(),
+      totals:
+        this.tabletop?.enabled || this.elapsed < this.fogUntil
+          ? null
+          : this.totals(),
       last: this.last,
       events: this.events,
       stream: this.stream,

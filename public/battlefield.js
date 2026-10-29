@@ -14,11 +14,12 @@
   for (const [team, names] of Object.entries({
     red: ["char01V01", "char02V01", "char03V01"],
     blue: ["zmb01V01", "zmb01V02", "zmb01V03", "zmb01V04"],
-  })) sprites[team] = names.map((name) => {
-    const image = new Image();
-    image.src = `/characters/${name}.png`;
-    return image;
-  });
+  }))
+    sprites[team] = names.map((name) => {
+      const image = new Image();
+      image.src = `/characters/${name}.png`;
+      return image;
+    });
   const equippedImages = new Map();
   let environmentImage, environmentUrl;
   const color = { red: "#ff6179", blue: "#65b9ff" };
@@ -46,10 +47,16 @@
     if (environmentUrl !== s.environment?.url) {
       environmentUrl = s.environment?.url;
       environmentImage = null;
-      if (environmentUrl) { environmentImage = new Image(); environmentImage.src = environmentUrl; }
+      if (environmentUrl) {
+        environmentImage = new Image();
+        environmentImage.src = environmentUrl;
+      }
     }
     const label = document.querySelector(".field-label");
-    if (label) label.textContent = window.FrenemiesScenes.has(s.environment?.id) ? window.FrenemiesScenes.title(s.environment.id) : s.environment?.name || "NEON BATTLEFIELD";
+    if (label)
+      label.textContent = window.FrenemiesScenes.has(s.environment?.id)
+        ? window.FrenemiesScenes.title(s.environment.id)
+        : s.environment?.name || "NEON BATTLEFIELD";
   });
   const line = (x, y, x2, y2, c, width = 2) => {
     ctx.strokeStyle = c;
@@ -91,27 +98,69 @@
     }
     ctx.globalAlpha = lineStrength > 0 ? 1 : 0.35;
     const roster = state?.roster?.[t] || [];
-    const visible = roster.length || Math.min(count || (state?.status === "lobby" ? 3 : 0), 6);
+    const visible =
+      roster.length ||
+      Math.min(count || (state?.status === "lobby" ? 3 : 0), 6);
     for (let i = 0; i < visible; i++) {
-      const player=roster[i];
+      const player = roster[i];
       let image = sprites[t][i % sprites[t].length];
-      if(player?.asset){if(!equippedImages.has(player.asset)){const img=new Image();img.src=player.asset;equippedImages.set(player.asset,img);}image=equippedImages.get(player.asset);}
+      if (player?.asset) {
+        if (!equippedImages.has(player.asset)) {
+          const img = new Image();
+          img.src = player.asset;
+          equippedImages.set(player.asset, img);
+        }
+        image = equippedImages.get(player.asset);
+      }
 
       if (!image.complete || !image.naturalWidth) continue;
       const height = Math.min(h * 0.62, 120) * (i < 3 ? 0.88 : 1);
-      const width = height * image.naturalWidth / image.naturalHeight;
+      const width = (height * image.naturalWidth) / image.naturalHeight;
       const x = 42 + (i % 3) * Math.min(42, w * 0.04);
-      const bob = !reduced.matches && state?.status === "running"
-        ? Math.sin(clock / 240 + i * 1.6) * 2 : 0;
+      const bob =
+        !reduced.matches && state?.status === "running"
+          ? Math.sin(clock / 240 + i * 1.6) * 2
+          : 0;
       ctx.save();
       // Contact shadows stay grounded when the actor bobs.
       ctx.fillStyle = "#101b1c55";
-      ctx.beginPath(); ctx.ellipse(x, (i < 3 ? -12 : 5), width*.34, Math.max(2,height*.035), 0, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(
+        x,
+        i < 3 ? -12 : 5,
+        width * 0.34,
+        Math.max(2, height * 0.035),
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
       ctx.translate(x, (i < 3 ? -12 : 5) + bob);
       // Zombies already face left; cancel the squad's mirror for their artwork.
       if (!left) ctx.scale(-1, 1);
+      if (player?.prestige) {
+        ctx.strokeStyle = ["#9cbdff", "#bd91ff", "#f5d778"][
+          Math.min(2, Math.floor((player.prestige - 1) / 4))
+        ];
+        ctx.lineWidth = 2 + player.prestige * 0.25;
+        ctx.beginPath();
+        ctx.ellipse(0, -4, width * 0.55, 8, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
       ctx.drawImage(image, -width / 2, -height, width, height);
-      if(player){text(player.name.length>12?player.name.slice(0,11)+"…":player.name,0,-height-5,Math.max(9,Math.min(12,w/95)),"#ffffff");}
+      if (player) {
+        text(
+          player.name.length > 12
+            ? player.name.slice(0, 11) + "…"
+            : player.name,
+          0,
+          -height - 5,
+          Math.max(9, Math.min(12, w / 95)),
+          "#ffffff",
+        );
+      }
+      if (player?.prestige)
+        text("RANK " + player.prestige, 0, 12, 9, "#f5d778");
       ctx.restore();
     }
     ctx.globalAlpha = 1;
@@ -172,7 +221,10 @@
         text("BARRAGE · " + e.name, w / 2, 38, Math.min(18, w / 45), "#e6ff95");
     } else if (e.kind === "victory") {
       text(
-        e.team === "draw" ? "DRAW" : (e.team === "red" ? "HUMANS" : "ZOMBIES") + " VICTORY",
+        e.team === "draw"
+          ? "DRAW"
+          : (state?.creator?.factions?.[e.team] ||
+              (e.team === "red" ? "HUMANS" : "ZOMBIES")) + " VICTORY",
         w / 2,
         h * 0.42,
         Math.min(38, w / 20),
@@ -185,7 +237,8 @@
           defend: "SHIELD",
           surge: "SURGE",
           supply: "+ SUPPLY",
-        }[e.kind] || (e.kind === "join" ? e.name + " JOINED" : e.kind.toUpperCase());
+        }[e.kind] ||
+        (e.kind === "join" ? e.name + " JOINED" : e.kind.toUpperCase());
       ctx.globalAlpha = Math.max(0, 1 - age / 1.5);
       text(label, x, y - 25 - (reduced.matches ? 0 : age * 15), 20, c);
       ctx.globalAlpha = 1;
@@ -208,18 +261,38 @@
       g.addColorStop(1, "#152e46");
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
-      const scenic = window.FrenemiesScenes.background(ctx, w, h, state?.environment?.id);
-      if (!scenic && environmentImage?.complete && environmentImage.naturalWidth) {
-        const scale = Math.max(w / environmentImage.naturalWidth, h / environmentImage.naturalHeight);
-        const width = environmentImage.naturalWidth * scale, height = environmentImage.naturalHeight * scale;
-        ctx.drawImage(environmentImage, (w - width) / 2, (h - height) / 2, width, height);
-        ctx.fillStyle = "#09101a55"; ctx.fillRect(0, 0, w, h);
+      const scenic = window.FrenemiesScenes.background(
+        ctx,
+        w,
+        h,
+        state?.environment?.id,
+      );
+      if (
+        !scenic &&
+        environmentImage?.complete &&
+        environmentImage.naturalWidth
+      ) {
+        const scale = Math.max(
+          w / environmentImage.naturalWidth,
+          h / environmentImage.naturalHeight,
+        );
+        const width = environmentImage.naturalWidth * scale,
+          height = environmentImage.naturalHeight * scale;
+        ctx.drawImage(
+          environmentImage,
+          (w - width) / 2,
+          (h - height) / 2,
+          width,
+          height,
+        );
+        ctx.fillStyle = "#09101a55";
+        ctx.fillRect(0, 0, w, h);
       }
       if (!scenic) {
-      for (let x = 0; x < w; x += 50)
-        line(x, h * 0.78, x + w * 0.03, h, "#25344a", 1);
-      line(0, h * 0.78, w, h * 0.78, "#42536e", 2);
-      line(w / 2, h * 0.2, w / 2, h * 0.88, "#45526a", 1);
+        for (let x = 0; x < w; x += 50)
+          line(x, h * 0.78, x + w * 0.03, h, "#25344a", 1);
+        line(0, h * 0.78, w, h * 0.78, "#42536e", 2);
+        line(w / 2, h * 0.2, w / 2, h * 0.88, "#45526a", 1);
       }
       squad("red");
       squad("blue");

@@ -1,1 +1,64 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Channel Shop</title><link rel="stylesheet" href="/style.css"><script src="/shop.js" defer></script></head><body><main class="shell"><h1 id="title">Channel shop</h1><p id="notice">Loading...</p><p>In this channel’s Twitch chat: !join, then !wallet or !inventory. Redeem an item using the command shown below, then !equip its item ID. This page previews items; it cannot access or change another viewer’s inventory.</p><p>Earn 10 per eligible battle, +5 for a win and +20 for first daily play (UTC). At least two accepted votes, ten-second battle and both teams participating. First ten eligible battles each day earn rewards. No cash value or Bits conversion.</p><div id="items" class="steps"></div><h2>Community missions</h2><div id="missions"></div></main></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Your channel rewards</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/shop.js" defer></script>
+  </head>
+  <body>
+    <main class="shell">
+      <p class="eyebrow">FRENEMIES / PLAYER HUB</p>
+      <h1 id="title">Your place in the show.</h1>
+      <p id="notice" role="status">Loading...</p>
+      <section class="panel">
+        <h2>Your character</h2>
+        <p id="identity">
+          Sign in with Twitch to see your balance and owned items. Playing in
+          chat needs no extra login.
+        </p>
+        <a id="login" class="button primary" hidden
+          >Connect your Twitch identity</a
+        >
+        <form id="demo-player" hidden>
+          <label
+            >Simulated username
+            <input
+              name="name"
+              value="test_player"
+              pattern="[a-z0-9_]{1,25}"
+              required /></label
+          ><button>Play as this demo character</button>
+        </form>
+        <div id="loadout" class="steps"></div>
+        <button id="upgrade" hidden>Upgrade showcase rank</button>
+        <p id="progress"></p>
+      </section>
+      <p>
+        In Twitch chat: !join, then !attack, !defend, !heal or !surge. Your
+        choice repeats every six seconds for this battle. Change it when the
+        fight changes. Choose again next battle.
+      </p>
+      <p>
+        Earn 10 per eligible battle, +5 for a win and +20 for first daily play
+        (UTC). Your choice must resolve twice, with both factions participating.
+        First ten eligible battles each day earn base currency; missions keep
+        progressing afterward. Cosmetics never increase combat strength. No cash
+        value or Bits conversion.
+      </p>
+      <h2>Make your entrance.</h2>
+      <label
+        >Show
+        <select id="filter">
+          <option value="all">All rewards</option>
+          <option value="owned">My inventory</option>
+          <option value="available">Not yet owned</option>
+        </select></label
+      >
+      <div id="items" class="steps"></div>
+      <h2>Community missions</h2>
+      <div id="missions"></div>
+    </main>
+  </body>
+</html>

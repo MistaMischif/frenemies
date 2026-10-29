@@ -1,3 +1,4 @@
+import { writeFile, rename } from "node:fs/promises";
 import { mkdirSync, readFileSync, writeFileSync, renameSync } from "node:fs";
 import path from "node:path";
 import pg from "pg";
@@ -52,6 +53,8 @@ export async function openStorage({ databaseUrl, dataDir }) {
   } catch (e) {
     if (e.code !== "ENOENT") throw e;
   }
+  const diskData = structuredClone(data);
+  let localWrites = Promise.resolve();
   return {
     mode: "local JSON",
     data,
@@ -66,9 +69,15 @@ export async function openStorage({ databaseUrl, dataDir }) {
       return true;
     },
     async put(id, record) {
-      data[id] = record;
-      writeFileSync(file + ".tmp", JSON.stringify(data, null, 2));
-      renameSync(file + ".tmp", file);
+      const run = localWrites
+        .catch(() => {})
+        .then(async () => {
+          diskData[id] = record;
+          await writeFile(file + ".tmp", JSON.stringify(diskData));
+          await rename(file + ".tmp", file);
+        });
+      localWrites = run;
+      await run;
     },
     close: async () => {},
   };

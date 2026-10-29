@@ -1,8 +1,18 @@
 const el = (id) => document.getElementById(id);
 let socket;
-document.body.classList.toggle("compact", new URLSearchParams(location.search).get("layout") === "compact");
+document.body.classList.toggle(
+  "compact",
+  new URLSearchParams(location.search).get("layout") === "compact",
+);
 function render(s) {
-  if(s.creator){el("experience-title").textContent=s.creator.title;for(const t of ["red","blue"])document.querySelector(".team."+t+" h2").textContent=s.creator.factions?.[t]||(t==="red"?"HUMANS":"ZOMBIES");}
+  el("player-notice").hidden = !s.notice || s.cleared;
+  el("player-notice").textContent = s.notice || "";
+  if (s.creator) {
+    el("experience-title").textContent = s.creator.title;
+    for (const t of ["red", "blue"])
+      document.querySelector(".team." + t + " h2").textContent =
+        s.creator.factions?.[t] || (t === "red" ? "HUMANS" : "ZOMBIES");
+  }
   window.dispatchEvent(new CustomEvent("battle-state", { detail: s }));
   document.body.classList.toggle("killed", s.cleared);
   el("arena").classList.toggle("cleared", s.cleared);
@@ -10,13 +20,18 @@ function render(s) {
   el("mode").textContent = s.simulated ? "SIMULATED CHAT" : "TWITCH CHAT";
   el("round").textContent = `BATTLE ${s.round || "—"}`;
   el("status").textContent = s.status.toUpperCase();
-  el("timer").textContent =
-    s.tabletop?.enabled ? `${Math.min(12,s.tabletop.turn+1)}/12` : `${Math.floor(s.remaining / 60)}:${String(s.remaining % 60).padStart(2, "0")}`;
+  el("timer").textContent = s.tabletop?.enabled
+    ? `${Math.min(12, s.tabletop.turn + 1)}/12`
+    : `${Math.floor(s.remaining / 60)}:${String(s.remaining % 60).padStart(2, "0")}`;
   el("effect").textContent = s.freeze
     ? `VOTING FROZEN · ${s.freeze}s`
     : s.fog
       ? `FOG · ${s.fog}s`
-      : "";
+      : s.status === "running"
+        ? `NEXT ACTION ${s.choiceRemaining || 0}s · Your choice repeats`
+        : s.show?.nextAt
+          ? `NEXT BATTLE ${Math.max(0, Math.ceil((s.show.nextAt - Date.now()) / 1000))}s`
+          : "";
   for (const t of ["red", "blue"]) {
     const a = s.teams[t];
     el(t + "-count").textContent = s.counts[t];
@@ -37,14 +52,22 @@ function render(s) {
           .join(" / ")
       : "VOTE TOTALS HIDDEN";
   }
-  el("event").textContent = s.recap ? `${s.last} / ${s.recap.participants} players / ${s.recap.acceptedVotes} accepted votes` : s.last;
+  el("event").textContent = s.recap
+    ? `${s.last} / ${s.recap.participants} players / ${s.recap.acceptedVotes} accepted votes`
+    : s.last;
   const campaign = s.campaign;
-  el("campaign-strip").textContent = campaign
-    ? `CHAPTER ${campaign.chapter} · REFUGE ${campaign.settlement}/100 · SUPPLIES ${campaign.supplies} · ${campaign.objective?.title || campaign.chronicle[0]?.text || "Your community's story starts here"}` : "";
+  const episode = s.show?.episode;
+  el("campaign-strip").textContent = episode
+    ? `${episode.title} · ${episode.progress}/${episode.target} · ${episode.ending || episode.intro}`
+    : campaign?.mode === "creator"
+      ? campaign.chronicle[0]?.text || "!join · Choose your next action"
+      : campaign
+        ? `CHAPTER ${campaign.chapter} · REFUGE ${campaign.settlement}/100 · SUPPLIES ${campaign.supplies} · ${campaign.objective?.title || campaign.chronicle[0]?.text || "Your community's story starts here"}`
+        : "";
   el("stream").textContent =
-    `${s.simulated ? "SIMULATED SESSION" : "THIS STREAM"} · HUMANS ${s.stream.red} : ${s.stream.blue} ZOMBIES`;
+    `${s.simulated ? "SIMULATED SESSION" : "THIS STREAM"} · ${s.creator?.factions?.red || "Humans"} ${s.stream.red} : ${s.stream.blue} ${s.creator?.factions?.blue || "Zombies"}`;
   el("season").textContent =
-    `SEASON · HUMANS ${s.season.red} : ${s.season.blue} ZOMBIES`;
+    `SEASON · ${s.creator?.factions?.red || "Humans"} ${s.season.red} : ${s.season.blue} ${s.creator?.factions?.blue || "Zombies"}`;
 }
 function connect() {
   socket = new WebSocket(

@@ -1,14 +1,14 @@
 # Frenemies
 
-Frenemies turns Twitch chat into Human and Zombie factions in an animated C2G outbreak. Free viewers join, vote and build a persistent channel story. The streamer runs short battles alongside their main content.
+Frenemies is a creator-owned Twitch entertainment platform: team battles, authored community episodes, earned cosmetics and persistent characters alongside the streamer’s main show. C2G is an optional example pack. Creators supply their own names, skins, starter characters, environments and stories.
 
 ## Current delivery status
 
-Version 1.7.0 adds creator-managed skins and missions, earned currency, persistent inventory, named equipped characters and aggregate D1/D7 participation tracking. Open **Creator studio** from controls. See [creator economy documentation](docs/CREATOR-ECONOMY.md) for rules and limits. Real-money payouts remain separate and unimplemented.
+Version 1.8.0 adds balanced six-second persistent tactics, automatic intermissions, editable mission editions, branching community episodes with shared cosmetic unlocks, authenticated player inventory, cosmetic ranks and broadcast-based participation/contribution comparisons. Shop reads no longer write storage or pause combat. Open **Creator studio** from controls. See [creator economy documentation](docs/CREATOR-ECONOMY.md) for rules and limits. Real-money payouts remain separate and unimplemented.
 
 Version 1.6.0 restores the Twitch-first entry point, adds !join, a compact OBS layout, and accurate battle recaps. Board-game prototypes are removed from the main navigation; saved prototype data is retained. Existing active prototypes have an explicit Return to Twitch battles control that does not award a win.
 
-Established hosting: https://frenemies-u3n4.onrender.com. Source: https://github.com/MistaMischif/frenemies. Current release verification is in releases/1.7.0/README.md. Bits availability still depends on Extension onboarding and channel eligibility; do not treat the simulated Barrage as a live transaction. No large-streamer adoption or audience-retention uplift has been established.
+Established hosting: https://frenemies-u3n4.onrender.com. Source: https://github.com/MistaMischif/frenemies. Current release verification is in releases/1.8.0/README.md. Bits availability still depends on Extension onboarding and channel eligibility; do not treat the simulated Barrage as a live transaction. No large-streamer adoption or audience-retention uplift has been established.
 
 See docs/TWITCH-PRODUCT-DIRECTION.md for the research, prioritized changes and pilot criteria. Planned features are distinguished from implemented ones.
 
@@ -32,20 +32,20 @@ To configure Twitch, copy `.env.example` to `.env` and fill values locally. Neve
 
 Choose Full arena or Compact strip in controls before copying the OBS URL. Compact uses `?layout=compact` on the same read-only overlay; no extra viewer permissions. The preview uses the selected layout. Overlay controls retain pause and kill-switch behavior.
 
-`!join` restores a known character's faction, places infected characters on Zombies, and assigns new characters to the smaller joined roster (Humans on ties). It does not switch an already-joined player or add an active headcount until participation. Explicit team commands remain available between battles.
+`!join` restores a known character's faction, places infected characters on Zombies when the optional C2G outbreak rules are enabled, and assigns new characters to the smaller joined roster (Humans on ties). It does not switch an already-joined player or add an active headcount until participation. Explicit team commands remain available between battles.
 
 After a battle, controls show unique active participants, accepted command votes, duration and up to three viewers with most accepted votes. These are participation counts, not skill awards or proof of retention. Duplicate commands are excluded. Recaps are session-only and clear for the next battle.
 
 ## Rules and explicit interpretations
 
-- A battle lasts up to 180 seconds; each team begins at 100 line strength. Tick every two seconds. One counted vote per viewer per window, enforced on the server. The first valid vote wins; duplicates do not change it.
-- The most-voted command executes. Command ties use the public order attack, defend, heal, surge. If there are no votes, no command executes.
-- Attack is `min(25, (5 + active players) × power multiplier)`. The 25-damage total cap is applied after double damage. Defense then halves damage; fractional line strength is retained.
-- Heal is `min(15, 3 + floor(active players / 2))`. Healing and bonuses cannot exceed the starting maximum of 100.
+- A battle lasts up to 180 seconds; each team begins at 100 line strength. Actions resolve every six seconds. A viewer’s chosen tactic repeats for this battle; the first accepted change per window counts. Choices clear for the next battle. Repeating commands is unnecessary.
+- The most-voted command executes. Command ties use the public order attack, defend, heal, surge. If there are no chosen tactics, no command executes.
+- Attack deals 8 damage, or 16 with power, independent of team size. Defense halves damage. Both teams resolve simultaneously.
+- Heal restores 5 line strength. Healing and bonuses cannot exceed the starting maximum of 100.
 - Defend halves the next incoming attack and is consumed by it. Shields do not stack. Surge doubles the next attack, once per team per 30 seconds. Surge and subscription power-ups do not multiply together or stack.
-- Preparation/healing resolves before simultaneous attacks on each tick. This prevents Red-first ordering advantage. Simultaneous zero lines produce a draw. Otherwise zero loses; at timeout compare line strength, then active players, then draw.
-- **Active player means a joined viewer who voted or triggered an applicable EventSub moment at any time in this battle. Counts do not decay when people stop chatting or leave.** The user explicitly confirmed this interpretation. Counts reset at the next battle. A smaller team hits less hard, but the game does not invent departures to make headcounts dwindle. The pitch's “dwindles” must not be demonstrated as an inactivity mechanic.
-- New viewers can choose their first team mid-battle. Existing players cannot switch while running or paused. Team switching reopens after the result. Next battle resets lines and active counts and starts immediately.
+- Preparation/healing resolves before simultaneous attacks on each tick. This prevents Red-first ordering advantage. Simultaneous zero lines produce a draw. Otherwise zero loses; at timeout compare line strength, then draw. Population does not break ties.
+- **Active player means a joined viewer who voted or triggered an applicable EventSub moment at any time in this battle. Counts do not decay when people stop chatting or leave.** The user explicitly confirmed this interpretation. Counts reset at the next battle. Team size does not amplify damage, and the game does not invent departures to make headcounts dwindle. The pitch's “dwindles” must not be demonstrated as an inactivity mechanic.
+- New viewers can choose their first team mid-battle. Existing players cannot switch while running or paused. Team switching reopens after the result. Manual Next battle resets lines, active counts and choices immediately. Automatic mode waits 30 seconds after results, stops after two empty battles, and disables on pause, kill or process restart.
 - Pause stops battle time and timed effects and clears pending votes. Freeze clears pending votes and blocks new votes for ten seconds while battle time continues. Fog removes vote totals from the server's public snapshot for ten seconds.
 - There is **no hidden rubber-banding, catch-up bonus or secret balancing**. Battlefield events affect both teams equally.
 
@@ -67,11 +67,11 @@ After OAuth, the server looks up the broadcaster through Helix, connects their c
 
 - Follow: joined follower's team +2, once per Twitch account per channel across all battles and restarts.
 - Subscription/resub: subscriber's next team attack powered up. Gift subscriptions credit the giver; gift-recipient subscribe notifications are ignored to avoid double awards. Anonymous/unjoined givers cannot be assigned a team and get no bonus.
-- Raid: the raiding broadcaster's chosen team gets +5. Twitch does not supply a team roster of all raiders. Unjoined raiding broadcaster means no team bonus; raiders may join through chat.
+- Raid: both sides receive a supply drop during a running battle; the raiding broadcaster's chosen team can also receive the existing +5 reinforcement. Twitch does not supply a team roster of all raiders. Unjoined raiding broadcaster means no team bonus; raiders may join through chat.
 - Hype Train v2 does not identify one triggering viewer. With the **user-approved** `HYPE_TEAM_POLICY=contributors`, each team represented by `top_contributions` gets 60 seconds of double vote weight. Both teams may benefit; the overlay shows individual frenzy countdowns. Unknown/unjoined contributors are not silently assigned a team. With any other policy value, the overlay announces the train without assigning frenzy.
 - Rewards named exactly **Supply drop**, **Fog**, and **Freeze** trigger the symmetric effects. Create them manually in Twitch if channel points are available. These effects also work through authenticated streamer controls without channel points.
 
-All team bonuses require a running battle and a joined, nonblocked viewer. Events received during a pause or between battles are not banked. Real EventSub delivery is authenticated with Twitch HMAC signatures, checked for timestamp freshness and deduplicated by message ID. No simulated event is represented as Twitch evidence.
+Named team bonuses require a running battle and a joined, nonblocked viewer. The symmetric raid supply drop does not require the raiding broadcaster to have joined. Events received during a pause or between battles are not banked. Real EventSub delivery is authenticated with Twitch HMAC signatures, checked for timestamp freshness and deduplicated by message ID. No simulated event is represented as Twitch evidence.
 
 References: [Twitch IRC](https://dev.twitch.tv/docs/chat/irc/), [EventSub types](https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/), [webhook handling](https://dev.twitch.tv/docs/eventsub/handling-webhook-events/), [scopes](https://dev.twitch.tv/docs/authentication/scopes/).
 
